@@ -14,6 +14,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.lib.utils import ImageReader
 from functools import wraps
+import re
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'entregas.db')
@@ -163,6 +164,19 @@ def format_phone(phone):
     if not phone.startswith('34'):
         phone = '34' + phone.lstrip('0')
     return phone
+
+def is_mitie_email(addr: str) -> bool:
+    if not addr:
+        return False
+    addr = addr.strip()
+    # allow case-insensitive mitie.es domain
+    return re.match(r'^[A-Za-z0-9._%+-]+@mitie\.es$', addr, re.IGNORECASE) is not None
+
+def is_valid_imei(imei: str) -> bool:
+    if not imei:
+        return False
+    imei = imei.strip()
+    return re.match(r'^\d{15}$', imei) is not None
 
 def generate_entrega_pdf(situm, usuario, imei, telefono, notas, timestamp):
     """Genera PDF de entrega con datos y comunicación de geolocalización"""
@@ -360,7 +374,7 @@ def administracion():
     cursor = db.cursor()
     cursor.execute('SELECT id, username, rol, activo, fecha_creacion FROM usuarios ORDER BY fecha_creacion DESC')
     usuarios = cursor.fetchall()
-    return render_template('administracion.html', usuarios=usuarios)
+    return render_template('administracion.html', usuarios=usuarios, roles=ROLES_PERMISOS.keys())
 
 @app.route('/usuarios/crear', methods=['GET', 'POST'])
 @require_permission('crear_usuario')
@@ -370,12 +384,9 @@ def crear_usuario():
         password = request.form.get('password', '')
         rol = request.form.get('rol', 'viewer')
         
-        if not username or not password:
+        # Permitimos cualquier contraseña no vacía proporcionada por el administrador.
+        if not username or password is None or password == '':
             flash('Usuario y contraseña requeridos', 'error')
-            return redirect(url_for('crear_usuario'))
-        
-        if len(password) < 6:
-            flash('La contraseña debe tener al menos 6 caracteres', 'error')
             return redirect(url_for('crear_usuario'))
         
         if rol not in ROLES_PERMISOS:
@@ -425,6 +436,40 @@ def editar_usuario(usuario_id):
     
     return render_template('editar_usuario.html', usuario=usuario, roles=ROLES_PERMISOS.keys())
 
+
+@app.route('/usuarios/<int:usuario_id>/cambiar_contrasena', methods=['GET', 'POST'])
+@require_permission('cambiar_rol')
+def cambiar_contrasena_usuario(usuario_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute('SELECT id, username FROM usuarios WHERE id = ?', (usuario_id,))
+    usuario = cursor.fetchone()
+    if not usuario:
+        flash('Usuario no encontrado', 'error')
+        return redirect(url_for('administracion'))
+
+    if request.method == 'POST':
+        new = request.form.get('new_password', '')
+        confirm = request.form.get('confirm_password', '')
+
+        if not new or not confirm:
+            flash('Todos los campos son requeridos', 'error')
+            return redirect(url_for('cambiar_contrasena_usuario', usuario_id=usuario_id))
+
+        if new != confirm:
+            flash('La nueva contraseña y la confirmación no coinciden', 'error')
+            return redirect(url_for('cambiar_contrasena_usuario', usuario_id=usuario_id))
+
+        new_hash = generate_password_hash(new)
+        db.execute('UPDATE usuarios SET password = ? WHERE id = ?', (new_hash, usuario_id))
+        db.commit()
+        flash('Contraseña actualizada correctamente', 'success')
+        return redirect(url_for('administracion'))
+
+    # usuario puede ser sqlite3.Row; pasar username para mostrar
+    username = usuario['username'] if hasattr(usuario, 'keys') else usuario[1]
+    return render_template('admin_cambiar_contrasena.html', usuario_id=usuario_id, username=username)
+
 @app.route('/usuarios/<int:usuario_id>/eliminar', methods=['POST'])
 @require_permission('eliminar_usuario')
 def eliminar_usuario(usuario_id):
@@ -457,6 +502,18 @@ def entrega():
     tipo = 'entrega'
     timestamp = datetime.utcnow().isoformat()
     db = get_db()
+
+    # Validación server-side del campo situm (dominio @mitie.es)
+    if situm and not is_mitie_email(situm):
+        flash('El campo Situm debe ser un email con dominio @mitie.es', 'error')
+        return redirect(url_for('index'))
+
+    # Normalizar IMEI (quitar todo lo que no sean dígitos) y validación
+    imei_digits = re.sub(r'\D', '', imei or '')
+    if imei and not is_valid_imei(imei_digits):
+        flash('IMEI inválido — debe contener exactamente 15 dígitos', 'error')
+        return redirect(url_for('index'))
+    imei = imei_digits
 
     # Comprobar si el IMEI ya está 'entregado' (es decir, no ha sido recepcionado aún)
     if imei:
@@ -493,6 +550,18 @@ def recepcion():
     tipo = 'recepcion'
     timestamp = datetime.utcnow().isoformat()
     db = get_db()
+
+    # Validación server-side del campo situm (dominio @mitie.es)
+    if situm and not is_mitie_email(situm):
+        flash('El campo Situm debe ser un email con dominio @mitie.es', 'error')
+        return redirect(url_for('index'))
+
+    # Normalizar IMEI (quitar todo lo que no sean dígitos) y validación
+    imei_digits = re.sub(r'\D', '', imei or '')
+    if imei and not is_valid_imei(imei_digits):
+        flash('IMEI inválido — debe contener exactamente 15 dígitos', 'error')
+        return redirect(url_for('index'))
+    imei = imei_digits
     db.execute('INSERT INTO entregas (situm, usuario, imei, telefono, notas_telefono, tipo, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)',
                (situm, usuario, imei, telefono, notas_telefono, tipo, timestamp))
     db.commit()
@@ -506,6 +575,13 @@ def incidencia():
     telefono = format_phone(request.form.get('telefono', '').strip())
     notas = request.form.get('notas', '').strip()
     timestamp = datetime.utcnow().isoformat()
+
+    # Normalizar IMEI (quitar todo lo que no sean dígitos) y validación
+    imei_digits = re.sub(r'\D', '', imei or '')
+    if imei and not is_valid_imei(imei_digits):
+        flash('IMEI inválido — debe contener exactamente 15 dígitos', 'error')
+        return redirect(url_for('index'))
+    imei = imei_digits
     
     # Validar que hay archivo subido
     if 'archivo' not in request.files or request.files['archivo'].filename == '':
@@ -802,6 +878,49 @@ def export_incidents():
     wb.save(bio)
     bio.seek(0)
     return send_file(bio, as_attachment=True, download_name='incidencias.xlsx', mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+
+@app.route('/perfil/cambiar_contrasena', methods=['GET', 'POST'])
+@login_required
+def cambiar_contrasena():
+    db = get_db()
+    cursor = db.cursor()
+    if request.method == 'POST':
+        current = request.form.get('current_password', '')
+        new = request.form.get('new_password', '')
+        confirm = request.form.get('confirm_password', '')
+
+        if not current or not new or not confirm:
+            flash('Todos los campos son requeridos', 'error')
+            return redirect(url_for('cambiar_contrasena'))
+
+        if new != confirm:
+            flash('La nueva contraseña y la confirmación no coinciden', 'error')
+            return redirect(url_for('cambiar_contrasena'))
+
+        cursor.execute('SELECT password FROM usuarios WHERE id = ?', (current_user.id,))
+        row = cursor.fetchone()
+        if not row:
+            flash('Usuario no encontrado', 'error')
+            return redirect(url_for('index'))
+
+        # row may be sqlite3.Row
+        stored_hash = row['password'] if isinstance(row, dict) or hasattr(row, 'keys') else row[0]
+        if not check_password_hash(stored_hash, current):
+            flash('Contraseña actual incorrecta', 'error')
+            return redirect(url_for('cambiar_contrasena'))
+
+        if len(new) < 6:
+            flash('La contraseña debe tener al menos 6 caracteres', 'error')
+            return redirect(url_for('cambiar_contrasena'))
+
+        new_hash = generate_password_hash(new)
+        db.execute('UPDATE usuarios SET password = ? WHERE id = ?', (new_hash, current_user.id))
+        db.commit()
+        flash('Contraseña actualizada correctamente', 'success')
+        return redirect(url_for('administracion'))
+
+    return render_template('cambiar_contrasena.html')
 
 @app.route('/incidents/delete-selected', methods=['POST'])
 @require_permission('borrar_registros')

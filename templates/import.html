@@ -7,8 +7,9 @@
     <link rel="stylesheet" href="/static/style.css">
   </head>
   <body>
+    <div class="bg-logo" aria-hidden="true"></div>
     <header class="topbar">
-      <h1>Importar desde archivo</h1>
+        <h1><img src="/static/mitie_logo.png" srcset="/static/mitie_logo@2x.png 2x" class="brand-logo" alt="Mitie" width="56" decoding="async">Importar desde archivo</h1>
       <div>
         <a class="history-link" href="/">Volver</a>
         {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
@@ -16,7 +17,11 @@
           <a class="history-link" href="/administracion">Administración</a>
         {% endif %}
         &nbsp;|&nbsp;
-        <a class="history-link" href="/logout">Cerrar Sesión</a>
+          {% if current_user.is_authenticated %}
+            <a class="history-link" href="/perfil/cambiar_contrasena">Cambiar clave</a>
+            &nbsp;|&nbsp;
+          {% endif %}
+          <a class="history-link" href="/logout">Cerrar Sesión</a>
       </div>
     </header>
     <main class="container">

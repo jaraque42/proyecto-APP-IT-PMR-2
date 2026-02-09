@@ -10,6 +10,10 @@
     <header class="topbar">
       <h1><img src="/static/mitie_logo.png" srcset="/static/mitie_logo@2x.png 2x" class="brand-logo" alt="Mitie" width="56" decoding="async">Registro de Entrega Recepción y Incidencias IT MADRID</h1> 
       <div>
+        {% if current_user.is_authenticated %}
+          <a class="history-link" href="/perfil/cambiar_contrasena">Cambiar clave</a>
+          &nbsp;|&nbsp;
+        {% endif %}
         <a class="history-link" href="/history">Histórico</a>
         &nbsp;|&nbsp;
         <a class="history-link" href="/incidents">Incidencias</a>
@@ -37,10 +41,10 @@
       <section class="card entrega">
         <h2>Entrega</h2>
         <form action="/entrega" method="post" class="form">
-          <label>Situm<input name="situm"></label>
-          <label>Usuario<input name="usuario" required></label>
-          <label>IMEI<input name="imei" required></label>
-          <label>Telefono<input name="telefono"></label>
+          <label>Situm<input name="situm" type="email" pattern="^[a-zA-Z0-9._%+-]+@mitie\.es$" placeholder="usuario@mitie.es" title="Email con dominio mitie.es" required></label>
+          <label>Usuario<input name="usuario" required placeholder="Apellido1, Apellido2, Nombre" title="Formato: Apellido1, Apellido2, Nombre"></label>
+          <label>IMEI<input name="imei" required pattern="\d{15}" inputmode="numeric" minlength="15" maxlength="15" placeholder="15 dígitos" title="IMEI de 15 dígitos"></label>
+          <label>Telefono<input name="telefono" pattern="\d{9}" inputmode="tel" minlength="9" maxlength="9" placeholder="9 dígitos" title="Teléfono de 9 dígitos"></label>
           <label>Notas de Telefono<input name="notas_telefono"></label>
           <div class="actions"><button type="submit" class="btn entrega">Registrar Entrega</button></div>
         </form>
@@ -49,10 +53,10 @@
       <section class="card recepcion">
         <h2>Recepción</h2>
         <form action="/recepcion" method="post" class="form">
-          <label>Situm<input name="situm"></label>
-          <label>Usuario<input name="usuario" required></label>
-          <label>IMEI<input name="imei" required></label>
-          <label>Telefono<input name="telefono"></label>
+          <label>Situm<input name="situm" type="email" pattern="^[a-zA-Z0-9._%+-]+@mitie\.es$" placeholder="usuario@mitie.es" title="Email con dominio mitie.es" required></label>
+          <label>Usuario<input name="usuario" required placeholder="Apellido1, Apellido2, Nombre" title="Formato: Apellido1, Apellido2, Nombre"></label>
+          <label>IMEI<input name="imei" required pattern="\d{15}" inputmode="numeric" minlength="15" maxlength="15" placeholder="15 dígitos" title="IMEI de 15 dígitos"></label>
+          <label>Telefono<input name="telefono" pattern="\d{9}" inputmode="tel" minlength="9" maxlength="9" placeholder="9 dígitos" title="Teléfono de 9 dígitos"></label>
           <label>Notas de Telefono<input name="notas_telefono"></label>
           <div class="actions"><button type="submit" class="btn recepcion">Registrar Recepción</button></div>
         </form>
@@ -61,9 +65,9 @@
       <section class="card incidencia">
         <h2>Registro de Incidencias</h2>
         <form action="/incidencia" method="post" class="form" enctype="multipart/form-data">
-          <label>IMEI<input name="imei" required></label>
-          <label>Usuario<input name="usuario" required></label>
-          <label>Teléfono<input name="telefono"></label>
+          <label>IMEI<input name="imei" required pattern="\d{15}" inputmode="numeric" minlength="15" maxlength="15" placeholder="15 dígitos" title="IMEI de 15 dígitos"></label>
+          <label>Usuario<input name="usuario" required placeholder="Apellido1, Apellido2, Nombre" title="Formato: Apellido1, Apellido2, Nombre"></label>
+          <label>Teléfono<input name="telefono" pattern="\d{9}" inputmode="tel" minlength="9" maxlength="9" placeholder="9 dígitos" title="Teléfono de 9 dígitos"></label>
           <label>Notas<textarea name="notas" style="width:100%;padding:8px;border:1px solid #e7e7e7;border-radius:6px;font-family:inherit;height:80px"></textarea></label>
           <label>Archivo (PDF o JPG)<input type="file" name="archivo" accept=".pdf,.jpg,.jpeg" required></label>
           <div class="actions"><button type="submit" class="btn incidencia">Registrar Incidencia</button></div>
@@ -73,4 +77,5 @@
 
     <script src="/static/app.js"></script>
   </body>
+    <div class="bg-logo" aria-hidden="true"></div>
 </html>

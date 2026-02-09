@@ -16,21 +16,91 @@ document.addEventListener('submit', function(e){
   const usuario = form.querySelector('[name=usuario]');
   const telefono = form.querySelector('[name=telefono]');
   
-  if(imei && imei.value.trim()===''){
-    e.preventDefault();
-    alert('IMEI es requerido');
-    imei.focus();
-    return;
+  // Validación avanzada basada en atributos pattern / minlength / maxlength
+  function removeFieldError(input){
+    input.classList.remove('input-error');
+    try{ input.setCustomValidity(''); }catch(e){}
+    const next = input.nextElementSibling;
+    if(next && next.classList && next.classList.contains('field-error-message')) next.remove();
   }
-  if(usuario && usuario.value.trim()===''){
-    e.preventDefault();
-    alert('Usuario es requerido');
-    usuario.focus();
-    return;
+
+  function showInvalid(input, message){
+    // non-blocking inline error under the field
+    removeFieldError(input);
+    input.classList.add('input-error');
+    const msg = document.createElement('div');
+    msg.className = 'field-error-message';
+    msg.textContent = message;
+    input.insertAdjacentElement('afterend', msg);
+    try{ input.setCustomValidity(message); }catch(e){}
+    input.focus();
   }
+
+  if(imei){
+    const v = imei.value.trim();
+    const pat = imei.getAttribute('pattern');
+    if(imei.hasAttribute('required') && v===''){
+      e.preventDefault(); showInvalid(imei, 'IMEI es requerido'); return;
+    }
+    if(v!=='' && pat){
+      const re = new RegExp('^'+pat+'$');
+      if(!re.test(v)){
+        e.preventDefault(); showInvalid(imei, 'IMEI inválido — debe tener 15 dígitos'); return;
+      }
+    }
+  }
+
+  // Ensure IMEI is exactly 15 digits (ignore non-digits)
+  if(imei){
+    const digits = (imei.value || '').replace(/\D/g, '');
+    if(digits.length > 0 && digits.length !== 15){
+      e.preventDefault(); showInvalid(imei, 'IMEI inválido — debe contener exactamente 15 dígitos'); return;
+    }
+  }
+
+  if(usuario){
+    const v = usuario.value.trim();
+    const pat = usuario.getAttribute('pattern');
+    if(usuario.hasAttribute('required') && v===''){
+      e.preventDefault(); showInvalid(usuario, 'Usuario es requerido'); return;
+    }
+    if(v!=='' && pat){
+      const re = new RegExp(pat);
+      if(!re.test(v)){
+        e.preventDefault(); showInvalid(usuario, 'Formato de usuario inválido. Usa: Apellido1, Apellido2, Nombre (sin . ; :)'); return;
+      } else {
+        removeFieldError(usuario);
+      }
+    }
+  }
+
   if(telefono && telefono.value.trim()!==''){
+    const v = telefono.value.trim();
+    const pat = telefono.getAttribute('pattern');
+    if(pat){ const re = new RegExp('^'+pat+'$'); if(!re.test(v)){ e.preventDefault(); showInvalid(telefono, 'Teléfono inválido — debe tener 9 dígitos'); return; } else { removeFieldError(telefono); } }
     addPhonePrefix(telefono);
   }
+
+  // remove inline errors when user starts typing
+  [imei, usuario, telefono].forEach(function(inp){ if(!inp) return; inp.addEventListener('input', function(){
+    if(!this.value) { removeFieldError(this); return; }
+    // For imei, strip non-digits as the user types (but don't replace value automatically to avoid surprises)
+    if(this.name === 'imei'){
+      const digits = this.value.replace(/\D/g,'');
+      // show tentative message if length not 15
+      if(digits.length !== 15){
+        // keep inline message but do not block typing
+        removeFieldError(this);
+        const msg = document.createElement('div'); msg.className = 'field-error-message'; msg.textContent = 'IMEI debe tener 15 dígitos'; this.insertAdjacentElement('afterend', msg);
+        this.classList.add('input-error');
+        return;
+      } else {
+        removeFieldError(this);
+      }
+    }
+    const p = this.getAttribute('pattern');
+    if(p){ try{ const re = new RegExp('^'+p+'$'); if(re.test(this.value.trim())) removeFieldError(this); }catch(e){} } else removeFieldError(this);
+  }); });
 });
 
 // Agregar prefijo al salir del campo de teléfono
@@ -38,6 +108,23 @@ document.querySelectorAll('[name=telefono]').forEach(function(input){
   input.addEventListener('blur', function(){
     if(this.value.trim()!==''){
       addPhonePrefix(this);
+    }
+  });
+});
+
+// Auto-limpiar IMEI en blur: dejar solo dígitos
+document.querySelectorAll('[name=imei]').forEach(function(input){
+  input.addEventListener('blur', function(){
+    if(!this.value) return;
+    const digits = this.value.replace(/\D/g,'');
+    if(this.value !== digits) this.value = digits;
+    // if not 15 digits, show inline message
+    if(digits.length > 0 && digits.length !== 15){
+      removeFieldError(this);
+      this.classList.add('input-error');
+      const msg = document.createElement('div'); msg.className = 'field-error-message'; msg.textContent = 'IMEI debe tener 15 dígitos'; this.insertAdjacentElement('afterend', msg);
+    } else {
+      removeFieldError(this);
     }
   });
 });
