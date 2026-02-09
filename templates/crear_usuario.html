@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Crear Usuario</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+      .form-container {
+        max-width: 500px;
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+      .form-container h2 {
+        margin-bottom: 30px;
+        color: #333;
+      }
+      .form-group {
+        margin-bottom: 20px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #555;
+      }
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #e7e7e7;
+        border-radius: 6px;
+        font-size: 14px;
+        font-family: inherit;
+        box-sizing: border-box;
+      }
+      .form-group input:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+        background: #f9f9ff;
+      }
+      .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 30px;
+      }
+      .btn {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+      .btn-primary {
+        background: #667eea;
+        color: white;
+      }
+      .btn-primary:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+      }
+      .btn-secondary {
+        background: #e7e7e7;
+        color: #333;
+      }
+      .btn-secondary:hover {
+        background: #d7d7d7;
+      }
+      .alert {
+        padding: 12px;
+        margin-bottom: 20px;
+        border-radius: 6px;
+        border-left: 4px solid;
+      }
+      .alert-error {
+        background-color: #fee;
+        border-left-color: #f44;
+        color: #c33;
+      }
+      .info-text {
+        font-size: 12px;
+        color: #999;
+        margin-top: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>Crear Usuario</h1>
+      <div>
+        <a class="history-link" href="/administracion">Atrás</a>
+        &nbsp;|&nbsp;
+        <a class="history-link" href="/logout">Cerrar Sesión</a>
+      </div>
+    </header>
+
+    <main class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <script>window.server_messages = {{ messages | tojson }};</script>
+        {% endif %}
+      {% endwith %}
+
+      <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+      <div class="form-container">
+        <h2>Nuevo Usuario</h2>
+        
+        <form method="post">
+          <div class="form-group">
+            <label for="username">Nombre de Usuario</label>
+            <input type="text" id="username" name="username" required autofocus>
+            <p class="info-text">Solo letras, números y guiones. Mínimo 3 caracteres.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Contraseña</label>
+            <input type="password" id="password" name="password" required>
+            <p class="info-text">Mínimo 6 caracteres.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="rol">Rol</label>
+            <select id="rol" name="rol" required>
+              <option value="">Seleccionar rol...</option>
+              {% if roles %}
+                {% for rol in roles %}
+                  <option value="{{ rol }}">
+                    {% if rol == 'admin' %}
+                      ADMIN - Acceso completo
+                    {% elif rol == 'operator' %}
+                      OPERATOR - Registrar y borrar
+                    {% elif rol == 'viewer' %}
+                      VIEWER - Solo lectura
+                    {% else %}
+                      {{ rol }}
+                    {% endif %}
+                  </option>
+                {% endfor %}
+              {% endif %}
+            </select>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Crear Usuario</button>
+            <a href="/administracion" class="btn btn-secondary" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </main>
+  </body>
+</html>

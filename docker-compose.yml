@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    image: appitpmr:latest
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    volumes:
+      # Para desarrollo monta el código (hot-reload manual). Para producción puedes quitar el montaje del código.
+      - ./:/app
+      - ./pdfs:/app/pdfs
+      - ./entregas.db:/app/entregas.db
+    restart: unless-stopped

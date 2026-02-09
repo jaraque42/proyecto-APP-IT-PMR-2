@@ -1,0 +1,5 @@
+﻿Flask
+Flask-Login
+openpyxl
+reportlab
+Werkzeug

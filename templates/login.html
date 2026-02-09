@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>APP IT PMR</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+      /* Login page — colores coherentes con el sitio (amarillo / blanco / negro) */
+      .login-outer {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 64px);
+        padding: 24px;
+      }
+      .login-card {
+        background: white;
+        padding: 32px;
+        border-radius: 8px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+        max-width: 420px;
+        width: 100%;
+      }
+      .login-card h2 { text-align: center; margin-top: 0; font-size: 20px; color: #111; }
+      .login-form label { display:block; margin:12px 0; font-weight:600; color:#111 }
+      .login-form input { width:100%; padding:10px; border:1px solid #e7e7e7; border-radius:6px; margin-top:6px }
+      .login-form button { width:100%; padding:12px; background:var(--accent); color:#111; border:none; border-radius:6px; font-weight:800; cursor:pointer }
+      .login-form button:hover { filter: brightness(.95) }
+      .info { text-align:center; margin-top:12px; color:#666; font-size:13px }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <h1><img src="/static/mitie_logo.png" srcset="/static/mitie_logo@2x.png 2x" class="brand-logo" alt="Mitie" width="56" decoding="async">APP IT PMR</h1>
+      <div>
+        <a class="history-link" href="/login">Login</a>
+        &nbsp;|&nbsp;
+        <a class="history-link" href="/">Inicio</a>
+      </div>
+    </header> 
+
+    <main class="login-outer">
+      <section class="login-card">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <script>window.server_messages = {{ messages | tojson }};</script>
+          {% endif %}
+        {% endwith %}
+
+        <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+        <h2>🔐 Iniciar sesión</h2>
+        <form method="post" class="login-form">
+          <label>Usuario
+            <input type="text" name="username" required autofocus>
+          </label>
+          <label>Contraseña
+            <input type="password" name="password" required>
+          </label>
+          <button type="submit" class="btn primary">Iniciar Sesión</button>
+        </form>
+
+        
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

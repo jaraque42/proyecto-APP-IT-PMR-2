@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Importar - Entregas</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>Importar desde archivo</h1>
+      <div>
+        <a class="history-link" href="/">Volver</a>
+        {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
+          &nbsp;|&nbsp;
+          <a class="history-link" href="/administracion">Administración</a>
+        {% endif %}
+        &nbsp;|&nbsp;
+        <a class="history-link" href="/logout">Cerrar Sesión</a>
+      </div>
+    </header>
+    <main class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <script>window.server_messages = {{ messages | tojson }};</script>
+        {% endif %}
+      {% endwith %}
+
+      <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+      <section class="card">
+        <h2>Subir CSV o XLSX</h2>
+        <p>El archivo debe tener encabezados como: <em>imei, telefono, numero_serie, modelo, usuario, tipo</em> (case-insensitive).</p>
+        <form action="/import" method="post" enctype="multipart/form-data">
+          <label>Archivo<input type="file" name="file" accept=".csv,.xlsx" required></label>
+          <div class="actions"><button class="btn primary" type="submit">Importar</button></div>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>

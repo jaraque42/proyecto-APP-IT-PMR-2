@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Histórico - Entregas y Recepciones</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>Histórico</h1>
+      <div>
+        <a class="history-link" href="/">Volver</a>
+        {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
+          &nbsp;|&nbsp;
+          <a class="history-link" href="/administracion">Administración</a>
+        {% endif %}
+        &nbsp;|&nbsp;
+        <a class="history-link" href="/logout">Cerrar Sesión</a>
+      </div>
+    </header>
+    <main class="container history">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <script>window.server_messages = {{ messages | tojson }};</script>
+        {% endif %}
+      {% endwith %}
+
+      <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+      <div class="search-box">
+        <h3>Búsqueda</h3>
+        <form method="get" action="/history" style="display:inline-block;">
+          <label>IMEI: <input type="text" name="imei" value="{{ imei_search }}"></label>
+          <label>Usuario: <input type="text" name="usuario" value="{{ usuario_search }}"></label>
+          <button type="submit" style="padding:8px 16px;background:#f0f0f0;border:1px solid #ccc;border-radius:4px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.1);font-size:14px;color:#000;font-weight:bold">Buscar</button>
+          <a href="/history" style="margin-left:10px;padding:8px 16px;background:#f0f0f0;border:1px solid #ccc;border-radius:4px;text-decoration:none;display:inline-block;box-shadow:0 2px 4px rgba(0,0,0,0.1);font-size:14px;color:#000;font-weight:bold">Limpiar</a>
+        </form>
+        <button id="select-all-rows" type="button" style="margin-left:10px;padding:8px 16px;background:#f0f0f0;border:1px solid #ccc;border-radius:4px;cursor:pointer;display:inline-block;box-shadow:0 2px 4px rgba(0,0,0,0.1);font-size:14px;color:#000;font-weight:bold">Seleccionar todo</button>
+        <button id="deselect-all-rows" type="button" style="margin-left:6px;padding:8px 16px;background:#f0f0f0;border:1px solid #ccc;border-radius:4px;cursor:pointer;display:inline-block;box-shadow:0 2px 4px rgba(0,0,0,0.1);font-size:14px;color:#000;font-weight:bold">Deseleccionar</button>
+        <button id="export-all-btn" type="button" style="margin-left:6px;padding:8px 16px;background:#f0f0f0;border:1px solid #ccc;border-radius:4px;cursor:pointer;display:inline-block;box-shadow:0 2px 4px rgba(0,0,0,0.1);font-size:14px;color:#000;font-weight:bold" onclick="const imei = new URLSearchParams(window.location.search).get('imei'); const usuario = new URLSearchParams(window.location.search).get('usuario'); const params = new URLSearchParams(); if(imei) params.set('imei', imei); if(usuario) params.set('usuario', usuario); window.location.href = '/history/export?' + params.toString();">Exportar todo</button>
+        <button id="export-selected-btn" type="button" style="margin-left:6px;padding:8px 16px;background:#f0f0f0;border:1px solid #ccc;border-radius:4px;cursor:pointer;display:inline-block;box-shadow:0 2px 4px rgba(0,0,0,0.1);font-size:14px;color:#000;font-weight:bold">Exportar seleccionados</button>
+      </div>
+      <div style="margin-top:12px">
+        <button id="delete-selected-btn" type="button" style="padding:6px 12px;background:#f0f0f0;border:1px solid #ccc;border-radius:4px;cursor:pointer;display:inline-block;box-shadow:0 2px 4px rgba(0,0,0,0.1);font-size:12px;color:#d32f2f;font-weight:bold">Borrar seleccionados</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="select-all"></th>
+            <th>Tipo</th>
+            <th>Situm</th>
+            <th>Usuario</th>
+            <th>IMEI</th>
+            <th>Telefono</th>
+            <th>Notas de Telefono</th>
+            <th>Fecha (UTC)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td><input type="checkbox" class="row-select" value="{{ r['id'] }}"></td>
+            <td>{{ r['tipo'] }}</td>
+            <td>{{ r['situm'] }}</td>
+            <td>{{ r['usuario'] }}</td>
+            <td>{{ r['imei'] }}</td>
+            <td>{{ r['telefono'] }}</td>
+            <td>{{ r['notas_telefono'] }}</td>
+            <td>{{ r['timestamp'] }}</td>
+          </tr>
+          {% else %}
+          <tr><td colspan="8">No hay registros.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

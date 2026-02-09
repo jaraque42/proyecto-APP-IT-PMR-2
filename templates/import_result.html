@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Resultado de import</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>Resultado de la importación</h1>
+      <div>
+        <a class="history-link" href="/">Volver</a>
+        {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
+          &nbsp;|&nbsp;
+          <a class="history-link" href="/administracion">Administración</a>
+        {% endif %}
+        &nbsp;|&nbsp;
+        <a class="history-link" href="/logout">Cerrar Sesión</a>
+      </div>
+    </header>
+    <main class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <script>window.server_messages = {{ messages | tojson }};</script>
+        {% endif %}
+      {% endwith %}
+
+      <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+      <section class="card">
+        <h2>Resumen</h2>
+        <p>Registros insertados: <strong>{{ inserted }}</strong></p>
+        {% if errors %}
+        <h3>Errores</h3>
+        <ul>
+          {% for e in errors %}
+          <li>{{ e }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        <div class="actions"><a class="btn secondary" href="/history">Ver histórico</a></div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Entrega / Recepción - Teléfonos</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <h1><img src="/static/mitie_logo.png" srcset="/static/mitie_logo@2x.png 2x" class="brand-logo" alt="Mitie" width="56" decoding="async">Registro de Entrega Recepción y Incidencias IT MADRID</h1> 
+      <div>
+        <a class="history-link" href="/history">Histórico</a>
+        &nbsp;|&nbsp;
+        <a class="history-link" href="/incidents">Incidencias</a>
+        &nbsp;|&nbsp;
+        <a class="history-link" href="/import">Importar</a>
+        {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
+          &nbsp;|&nbsp;
+          <a class="history-link" href="/administracion">Administración</a>
+        {% endif %}
+        &nbsp;|&nbsp;
+        <a class="history-link" href="/logout">Cerrar Sesión</a>
+      </div>
+    </header>
+
+    <main class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <script>window.server_messages = {{ messages | tojson }};</script>
+        {% endif %}
+      {% endwith %}
+
+      <!-- Contenedor de toasts (flotante) -->
+      <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+      <section class="card entrega">
+        <h2>Entrega</h2>
+        <form action="/entrega" method="post" class="form">
+          <label>Situm<input name="situm"></label>
+          <label>Usuario<input name="usuario" required></label>
+          <label>IMEI<input name="imei" required></label>
+          <label>Telefono<input name="telefono"></label>
+          <label>Notas de Telefono<input name="notas_telefono"></label>
+          <div class="actions"><button type="submit" class="btn entrega">Registrar Entrega</button></div>
+        </form>
+      </section>
+
+      <section class="card recepcion">
+        <h2>Recepción</h2>
+        <form action="/recepcion" method="post" class="form">
+          <label>Situm<input name="situm"></label>
+          <label>Usuario<input name="usuario" required></label>
+          <label>IMEI<input name="imei" required></label>
+          <label>Telefono<input name="telefono"></label>
+          <label>Notas de Telefono<input name="notas_telefono"></label>
+          <div class="actions"><button type="submit" class="btn recepcion">Registrar Recepción</button></div>
+        </form>
+      </section>
+
+      <section class="card incidencia">
+        <h2>Registro de Incidencias</h2>
+        <form action="/incidencia" method="post" class="form" enctype="multipart/form-data">
+          <label>IMEI<input name="imei" required></label>
+          <label>Usuario<input name="usuario" required></label>
+          <label>Teléfono<input name="telefono"></label>
+          <label>Notas<textarea name="notas" style="width:100%;padding:8px;border:1px solid #e7e7e7;border-radius:6px;font-family:inherit;height:80px"></textarea></label>
+          <label>Archivo (PDF o JPG)<input type="file" name="archivo" accept=".pdf,.jpg,.jpeg" required></label>
+          <div class="actions"><button type="submit" class="btn incidencia">Registrar Incidencia</button></div>
+        </form>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
