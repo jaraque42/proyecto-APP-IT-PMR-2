@@ -622,20 +622,18 @@ def incidencia():
         return redirect(url_for('index'))
     imei = imei_digits
     
-    # Validar que hay archivo subido
-    if 'archivo' not in request.files or request.files['archivo'].filename == '':
-        return redirect(url_for('index') + '?error=No file provided')
-    
-    archivo = request.files['archivo']
-    
-    # Validar tipo de archivo
-    allowed_extensions = {'pdf', 'jpg', 'jpeg'}
-    if not ('.' in archivo.filename and archivo.filename.rsplit('.', 1)[1].lower() in allowed_extensions):
-        return redirect(url_for('index') + '?error=Invalid file type')
-    
-    # Leer contenido del archivo
-    archivo_contenido = archivo.read()
-    archivo_nombre = archivo.filename
+    # Archivo opcional: si se sube se valida y se almacena, si no se guarda vacío
+    archivo_nombre = None
+    archivo_contenido = None
+    if 'archivo' in request.files and request.files['archivo'].filename != '':
+        archivo = request.files['archivo']
+        # Validar tipo de archivo
+        allowed_extensions = {'pdf', 'jpg', 'jpeg'}
+        if not ('.' in archivo.filename and archivo.filename.rsplit('.', 1)[1].lower() in allowed_extensions):
+            return redirect(url_for('index') + '?error=Invalid file type')
+        # Leer contenido del archivo
+        archivo_contenido = archivo.read()
+        archivo_nombre = archivo.filename
     
     # Guardar en BD
     db = get_db()
