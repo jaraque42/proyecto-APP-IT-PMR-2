@@ -19,10 +19,15 @@
     <div class="bg-logo" aria-hidden="true"></div>
     <header class="topbar">
       <h1><img src="/static/mitie_logo.png" srcset="/static/mitie_logo@2x.png 2x" class="brand-logo" alt="Mitie" width="56" decoding="async">Cambiar contraseña</h1>
-      <div>
-        <a class="history-link" href="/administracion">Atrás</a>
-        &nbsp;|&nbsp;
-        <a class="history-link" href="/logout">Cerrar Sesión</a>
+      <div style="display:flex;align-items:center;gap:12px">
+        {% if current_user.is_authenticated %}
+          <div class="user-badge">Operador: {{ current_user.username }}</div>
+        {% endif %}
+        <div>
+          <a class="history-link" href="/administracion">Atrás</a>
+          &nbsp;|&nbsp;
+          <a class="history-link" href="/logout">Cerrar Sesión</a>
+        </div>
       </div>
     </header>
 

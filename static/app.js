@@ -117,6 +117,32 @@ document.querySelectorAll('[name=imei]').forEach(function(input){
 
 // Tabla de histórico: seleccionar todo, exportar y botones
 document.addEventListener('DOMContentLoaded', function(){
+  // Ensure a global toast container attached to <body> so it isn't clipped by stacking contexts.
+  // If a #toast-container exists in the DOM (rendered in templates), move it to document.body
+  (function(){
+    let toast = document.getElementById('toast-container');
+    if(!toast){
+      toast = document.createElement('div');
+      toast.id = 'toast-container';
+      toast.setAttribute('aria-live','polite');
+      toast.setAttribute('aria-atomic','true');
+      document.body.appendChild(toast);
+    } else {
+      // If it's not a direct child of body, move it to body to escape stacking contexts
+      if(toast.parentNode !== document.body){
+        document.body.appendChild(toast);
+      }
+    }
+    // Force inline styles so they cannot be easily overridden by stacking contexts
+    toast.style.position = 'fixed';
+    toast.style.top = '20px';
+    toast.style.right = '20px';
+    toast.style.zIndex = '99999';
+    toast.style.display = 'flex';
+    toast.style.flexDirection = 'column';
+    toast.style.gap = '10px';
+    toast.style.pointerEvents = 'none';
+  })();
   // Select all checkbox de la tabla
   const selectAllCheckbox = document.getElementById('select-all');
   if(selectAllCheckbox){
@@ -259,6 +285,29 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 
+  // Mostrar / ocultar contraseña en login
+  (function(){
+    const toggle = document.getElementById('toggle-password');
+    const pwd = document.getElementById('login-password');
+    if(toggle && pwd){
+      toggle.addEventListener('click', function(e){
+        const isShown = pwd.type === 'text';
+        if(isShown){
+          pwd.type = 'password';
+          toggle.setAttribute('aria-pressed','false');
+          toggle.title = 'Mostrar contraseña';
+          toggle.textContent = '👁️';
+        } else {
+          pwd.type = 'text';
+          toggle.setAttribute('aria-pressed','true');
+          toggle.title = 'Ocultar contraseña';
+          toggle.textContent = '🙈';
+        }
+        pwd.focus();
+      });
+    }
+  })();
+
   // --- Toast notifications ---
   function createToast(message, category){
     const container = document.getElementById('toast-container');
@@ -341,5 +390,37 @@ document.addEventListener('DOMContentLoaded', function(){
     localStorage.setItem('darkMode', isDarkNow);
     applyDarkMode(isDarkNow);
   });
+
+  // --- Menú desplegable en el header ---
+  const menuToggle = document.getElementById('menu-toggle');
+  if(menuToggle){
+    const dropdown = menuToggle.closest('.dropdown');
+    const menuList = document.getElementById('menu-list');
+    function closeMenu(){
+      if(!dropdown) return;
+      dropdown.classList.remove('open');
+      menuToggle.setAttribute('aria-expanded','false');
+    }
+    function openMenu(){
+      if(!dropdown) return;
+      dropdown.classList.add('open');
+      menuToggle.setAttribute('aria-expanded','true');
+    }
+    menuToggle.addEventListener('click', function(e){
+      e.stopPropagation();
+      if(dropdown.classList.contains('open')) closeMenu(); else openMenu();
+    });
+    // click fuera para cerrar
+    document.addEventListener('click', function(e){ if(!dropdown.contains(e.target)) closeMenu(); });
+    // escape para cerrar
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeMenu(); });
+    // cerrar al elegir una opción
+    if(menuList){
+      menuList.addEventListener('click', function(e){
+        const target = e.target.closest('a');
+        if(target) closeMenu();
+      });
+    }
+  }
 
 });

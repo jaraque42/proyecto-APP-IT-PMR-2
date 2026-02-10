@@ -58,7 +58,7 @@ thead th{background:var(--accent)}
 @media (max-width:800px){.container{flex-direction:column;padding:12px;height:auto}.card{height:auto}}
 
 /* Toast notifications */
-#toast-container{position:fixed;top:20px;right:20px;z-index:1050;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+#toast-container{position:fixed;top:20px;right:20px;z-index:1400;display:flex;flex-direction:column;gap:10px;pointer-events:none}
 .toast{min-width:240px;max-width:360px;padding:12px 14px;border-radius:8px;color:#fff;box-shadow:0 6px 18px rgba(0,0,0,0.12);pointer-events:auto;opacity:0;transform:translateY(-10px);transition:all .25s ease-in-out;font-weight:600}
 .toast.show{opacity:1;transform:translateY(0)}
 .toast.success{background:#28a745}
@@ -107,10 +107,39 @@ body.dark .btn { color: inherit; }
 }
 
 /* Ensure header and main sit above the background logo */
-.topbar { position: relative; z-index: 2; }
+.topbar { position: relative; z-index: 1200; }
 main.container { position: relative; z-index: 2; }
 
 /* Ensure login form sits above the background logo */
 .login-outer { position: relative; z-index: 2; }
 .login-card { position: relative; z-index: 3; }
+
+/* Dropdown menu in header */
+.nav-actions{display:flex;align-items:center}
+.dropdown{position:relative}
+.dropdown .btn.secondary{background:transparent;color:rgba(255,255,255,0.95);border:1px solid rgba(255,255,255,0.12);padding:8px 12px;border-radius:8px}
+.dropdown .btn.secondary:hover{background:rgba(255,255,255,0.06)}
+.dropdown-content{position:absolute;right:0;top:calc(100% + 8px);background:#fff;color:#222;min-width:200px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,0.12);overflow:hidden;display:none;flex-direction:column;z-index:1300}
+.dropdown.open .dropdown-content{display:flex}
+.dropdown-content a{display:block;padding:10px 14px;text-decoration:none;color:inherit;border-bottom:1px solid #f1f1f1}
+.dropdown-content a:last-child{border-bottom:none}
+.dropdown-content a:hover{background:#f7f7f7}
+
+/* Dark mode for dropdown */
+body.dark .dropdown .btn.secondary{color:#e9edf0;border-color:rgba(255,255,255,0.06)}
+body.dark .dropdown-content{background:#121416;color:#e9edf0;border:1px solid #222}
+body.dark .dropdown-content a{border-bottom-color:#222}
+
+/* User badge in header */
+.user-badge{margin-left:16px;padding:6px 10px;background:rgba(255,255,255,0.12);color:#fff;border-radius:8px;font-weight:700;font-size:14px}
+body.dark .user-badge{background:rgba(255,255,255,0.06);color:#e9edf0}
+
+/* Password preview toggle */
+.password-wrapper{display:flex;align-items:center;gap:8px;width:100%}
+.password-wrapper input{flex:1;width:100%;padding-right:8px}
+.password-toggle{background:transparent;border:0;color:inherit;font-size:12px;cursor:pointer;padding:2px;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;line-height:1}
+.password-toggle:hover{background:rgba(0,0,0,0.04)}
+.password-toggle:focus{outline:2px solid rgba(0,0,0,0.12)}
+body.dark .password-toggle:hover{background:rgba(255,255,255,0.04)}
+body.dark .password-toggle:focus{outline:2px solid rgba(255,255,255,0.12)}
 

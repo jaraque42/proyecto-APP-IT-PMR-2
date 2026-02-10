@@ -24,8 +24,8 @@
       }
       .login-card h2 { text-align: center; margin-top: 0; font-size: 20px; color: #111; }
       .login-form label { display:block; margin:12px 0; font-weight:600; color:#111 }
-      .login-form input { width:100%; padding:10px; border:1px solid #e7e7e7; border-radius:6px; margin-top:6px }
-      .login-form button { width:100%; padding:12px; background:var(--accent); color:#111; border:none; border-radius:6px; font-weight:800; cursor:pointer }
+      .login-form input { width:88%; padding:10px; border:1px solid #e7e7e7; border-radius:6px; margin-top:6px }
+      .login-form button { padding:12px; background:transparent; color:var(--accent); border:none; border-radius:6px; font-weight:800; cursor:pointer; width:auto; display:inline-block }
       .login-form button:hover { filter: brightness(.95) }
       .info { text-align:center; margin-top:12px; color:#666; font-size:13px }
     </style>
@@ -34,10 +34,15 @@
     <div class="bg-logo" aria-hidden="true"></div>
     <header class="topbar">
       <h1><img src="/static/mitie_logo.png" srcset="/static/mitie_logo@2x.png 2x" class="brand-logo" alt="Mitie" width="56" decoding="async">APP IT PMR</h1>
-      <div>
-        <a class="history-link" href="/login">Login</a>
-        &nbsp;|&nbsp;
-        <a class="history-link" href="/">Inicio</a>
+      <div style="display:flex;align-items:center;gap:12px">
+        {% if current_user.is_authenticated %}
+          <div class="user-badge">Operador: {{ current_user.username }}</div>
+        {% endif %}
+        <div>
+          <a class="history-link" href="/login">Login</a>
+          &nbsp;|&nbsp;
+          <a class="history-link" href="/">Inicio</a>
+        </div>
       </div>
     </header> 
 
@@ -57,7 +62,10 @@
             <input type="text" name="username" required autofocus>
           </label>
           <label>Contraseña
-            <input type="password" name="password" required>
+            <span class="password-wrapper">
+              <input id="login-password" type="password" name="password" required>
+              <button id="toggle-password" type="button" class="password-toggle" aria-pressed="false" title="Mostrar contraseña">👁️</button>
+            </span>
           </label>
           <button type="submit" class="btn primary">Iniciar Sesión</button>
         </form>
