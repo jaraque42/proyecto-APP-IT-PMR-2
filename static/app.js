@@ -1,12 +1,5 @@
-// Agregar prefijo 34 a teléfono
-function addPhonePrefix(input) {
-  if (!input.value) return;
-  let val = input.value.toString().trim();
-  if (!val.startsWith('34')) {
-    val = '34' + val.replace(/^0+/, '');
-    input.value = val;
-  }
-}
+// Nota: se eliminó el prefijado automático '34' por petición del usuario.
+// La normalización/validación se realiza en el servidor.
 
 // Validación ligera y UX mínima
 document.addEventListener('submit', function(e){
@@ -74,11 +67,10 @@ document.addEventListener('submit', function(e){
     }
   }
 
-  if(telefono && telefono.value.trim()!==''){
+    if(telefono && telefono.value.trim()!==''){
     const v = telefono.value.trim();
     const pat = telefono.getAttribute('pattern');
     if(pat){ const re = new RegExp('^'+pat+'$'); if(!re.test(v)){ e.preventDefault(); showInvalid(telefono, 'Teléfono inválido — debe tener 9 dígitos'); return; } else { removeFieldError(telefono); } }
-    addPhonePrefix(telefono);
   }
 
   // remove inline errors when user starts typing
@@ -104,13 +96,7 @@ document.addEventListener('submit', function(e){
 });
 
 // Agregar prefijo al salir del campo de teléfono
-document.querySelectorAll('[name=telefono]').forEach(function(input){
-  input.addEventListener('blur', function(){
-    if(this.value.trim()!==''){
-      addPhonePrefix(this);
-    }
-  });
-});
+// No se añade prefijo automáticamente al perder el foco; la normalización la hace el servidor.
 
 // Auto-limpiar IMEI en blur: dejar solo dígitos
 document.querySelectorAll('[name=imei]').forEach(function(input){
