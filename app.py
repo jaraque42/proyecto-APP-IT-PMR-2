@@ -877,6 +877,83 @@ def incidents():
     incidents = cur.fetchall()
     return render_template('incidents.html', incidents=incidents, imei_search=imei_search, usuario_search=usuario_search)
 
+
+@app.route('/registro/<int:registro_id>/editar', methods=['GET', 'POST'])
+@require_permission('administracion')
+def editar_registro(registro_id):
+    db = get_db()
+    cur = db.execute('SELECT * FROM entregas WHERE id = ?', (registro_id,))
+    r = cur.fetchone()
+    if not r:
+        flash('Registro no encontrado', 'error')
+        return redirect(url_for('history'))
+
+    if request.method == 'GET':
+        return render_template('edit_entrega.html', r=r)
+
+    # POST: procesar actualización
+    situm = request.form.get('situm', '').strip()
+    usuario = request.form.get('usuario', '').strip()
+    imei = request.form.get('imei', '').strip()
+    raw_tel = request.form.get('telefono', '').strip()
+    telefono = format_phone(raw_tel)
+    notas_telefono = request.form.get('notas_telefono', '').strip()
+
+    # Validaciones
+    if situm and not is_mitie_email(situm):
+        flash('El campo Situm debe ser un email con dominio @mitie.es', 'error')
+        return redirect(url_for('editar_registro', registro_id=registro_id))
+
+    imei_digits = re.sub(r'\D', '', imei or '')
+    if imei and not is_valid_imei(imei_digits):
+        flash('IMEI inválido — debe contener exactamente 15 dígitos', 'error')
+        return redirect(url_for('editar_registro', registro_id=registro_id))
+
+    if raw_tel and telefono is None:
+        flash('Teléfono inválido — debe ser numérico de 9 dígitos o con prefijo +34/0034/34', 'error')
+        return redirect(url_for('editar_registro', registro_id=registro_id))
+
+    db.execute('UPDATE entregas SET situm = ?, usuario = ?, imei = ?, telefono = ?, notas_telefono = ? WHERE id = ?'
+               , (situm, usuario, imei_digits, telefono, notas_telefono, registro_id))
+    db.commit()
+    flash('Registro actualizado correctamente', 'success')
+    return redirect(url_for('history'))
+
+
+@app.route('/incidencia/<int:inc_id>/editar', methods=['GET', 'POST'])
+@require_permission('administracion')
+def editar_incidencia(inc_id):
+    db = get_db()
+    cur = db.execute('SELECT * FROM incidencias WHERE id = ?', (inc_id,))
+    i = cur.fetchone()
+    if not i:
+        flash('Incidencia no encontrada', 'error')
+        return redirect(url_for('incidents'))
+
+    if request.method == 'GET':
+        return render_template('edit_incidencia.html', i=i)
+
+    imei = request.form.get('imei', '').strip()
+    usuario = request.form.get('usuario', '').strip()
+    raw_tel = request.form.get('telefono', '').strip()
+    telefono = format_phone(raw_tel)
+    notas = request.form.get('notas', '').strip()
+
+    imei_digits = re.sub(r'\D', '', imei or '')
+    if imei and not is_valid_imei(imei_digits):
+        flash('IMEI inválido — debe contener exactamente 15 dígitos', 'error')
+        return redirect(url_for('editar_incidencia', inc_id=inc_id))
+
+    if raw_tel and telefono is None:
+        flash('Teléfono inválido — debe ser numérico de 9 dígitos o con prefijo +34/0034/34', 'error')
+        return redirect(url_for('editar_incidencia', inc_id=inc_id))
+
+    db.execute('UPDATE incidencias SET imei = ?, usuario = ?, telefono = ?, notas = ? WHERE id = ?',
+               (imei_digits, usuario, telefono, notas, inc_id))
+    db.commit()
+    flash('Incidencia actualizada correctamente', 'success')
+    return redirect(url_for('incidents'))
+
 @app.route('/incidents/export')
 @require_permission('ver_incidencias')
 def export_incidents():

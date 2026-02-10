@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Editar Registro</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>Editar registro #{{ r['id'] }}</h1>
+      <div><a class="history-link" href="/history">Volver</a></div>
+    </header>
+    <main class="container">
+      <form method="post" action="" class="form">
+        <label>Situm<input name="situm" value="{{ r['situm'] or '' }}" type="email" placeholder="usuario@mitie.es"></label>
+        <label>Usuario<input name="usuario" value="{{ r['usuario'] or '' }}" required></label>
+        <label>IMEI<input name="imei" value="{{ r['imei'] or '' }}" required pattern="\d{15}" inputmode="numeric" minlength="15" maxlength="15"></label>
+        <label>Telefono<input name="telefono" value="{{ r['telefono'] or '' }}" placeholder="9 dígitos o +34/0034/34"></label>
+        <label>Notas de Telefono<input name="notas_telefono" value="{{ r['notas_telefono'] or '' }}"></label>
+        <div class="actions"><button type="submit" class="btn">Guardar cambios</button></div>
+      </form>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Editar Incidencia</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <h1>Editar incidencia #{{ i['id'] }}</h1>
+      <div><a class="history-link" href="/incidents">Volver</a></div>
+    </header>
+    <main class="container">
+      <form method="post" action="" class="form">
+        <label>IMEI<input name="imei" value="{{ i['imei'] or '' }}" required pattern="\d{15}" inputmode="numeric" minlength="15" maxlength="15"></label>
+        <label>Usuario<input name="usuario" value="{{ i['usuario'] or '' }}" required></label>
+        <label>Telefono<input name="telefono" value="{{ i['telefono'] or '' }}" placeholder="9 dígitos o +34/0034/34"></label>
+        <label>Notas<textarea name="notas" style="width:100%;padding:8px;border:1px solid #e7e7e7;border-radius:6px;font-family:inherit;height:120px">{{ i['notas'] or '' }}</textarea></label>
+        <div class="actions"><button type="submit" class="btn">Guardar cambios</button></div>
+      </form>
+    </main>
+  </body>
+</html>

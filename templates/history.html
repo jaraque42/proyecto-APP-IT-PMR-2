@@ -60,6 +60,9 @@
             <th>Telefono</th>
             <th>Notas de Telefono</th>
             <th>Fecha (UTC)</th>
+            {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
+            <th>Acciones</th>
+            {% endif %}
           </tr>
         </thead>
         <tbody>
@@ -73,6 +76,9 @@
             <td>{{ r['telefono'] }}</td>
             <td>{{ r['notas_telefono'] }}</td>
             <td>{{ r['timestamp'] }}</td>
+            {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
+            <td><a href="/registro/{{ r['id'] }}/editar" class="btn small">Editar</a></td>
+            {% endif %}
           </tr>
           {% else %}
           <tr><td colspan="8">No hay registros.</td></tr>

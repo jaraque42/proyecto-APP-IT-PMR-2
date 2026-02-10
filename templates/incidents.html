@@ -71,6 +71,9 @@
                         <td>{{ incident['notas'] }}</td>
                         <td><a href="/incidents/download/{{ incident['id'] }}" style="color:#d32f2f;text-decoration:none">{{ incident['archivo_nombre'] }}</a></td>
                         <td>{{ incident['timestamp'] }}</td>
+                        {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
+                        <td><a href="/incidencia/{{ incident['id'] }}/editar" class="btn small">Editar</a></td>
+                        {% endif %}
                     </tr>
                     {% else %}
                     <tr><td colspan="7">No hay incidencias registradas.</td></tr>
