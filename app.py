@@ -157,13 +157,40 @@ def require_permission(permiso):
 init_db()
 
 def format_phone(phone):
-    """Agrega prefijo 34 al telefono si no lo tiene"""
+    """Normaliza teléfono: devuelve solo dígitos.
+
+    - Si el campo está vacío devuelve cadena vacía.
+    - Si contiene exactamente 9 dígitos devuelve esos 9 dígitos.
+    - Si contiene otro formato devuelve None (indica inválido).
+    No añade prefijo '34'.
+    """
     if not phone:
-        return phone
+        return ''
     phone = str(phone).strip()
-    if not phone.startswith('34'):
-        phone = '34' + phone.lstrip('0')
-    return phone
+    # Quitar cualquier carácter que no sea dígito
+    digits = re.sub(r'\D', '', phone)
+    # Si el usuario metió texto sin dígitos, considerar inválido
+    if digits == '':
+        return None
+
+    # Caso ya en formato nacional (9 dígitos)
+    if len(digits) == 9:
+        return digits
+
+    # Prefijo internacional +34 -> después de eliminar no-dígitos queda '34XXXXXXXXX'
+    if digits.startswith('34') and len(digits) == 11:
+        return digits[2:]
+
+    # Prefijo internacional en forma 0034
+    if digits.startswith('0034') and len(digits) == 13:
+        return digits[4:]
+
+    # Número con 0 inicial (ej. 0600123456) -> quitar 0 si produce 9 dígitos
+    if digits.startswith('0') and len(digits) == 10:
+        return digits[1:]
+
+    # Si no coincide con ningún patrón válido, considerarlo inválido
+    return None
 
 def is_mitie_email(addr: str) -> bool:
     if not addr:
@@ -497,7 +524,8 @@ def entrega():
     situm = request.form.get('situm', '').strip()
     usuario = request.form.get('usuario', '').strip()
     imei = request.form.get('imei', '').strip()
-    telefono = format_phone(request.form.get('telefono', '').strip())
+    raw_telefono = request.form.get('telefono', '').strip()
+    telefono = format_phone(raw_telefono)
     notas_telefono = request.form.get('notas_telefono', '').strip()
     tipo = 'entrega'
     timestamp = datetime.utcnow().isoformat()
@@ -514,6 +542,11 @@ def entrega():
         flash('IMEI inválido — debe contener exactamente 15 dígitos', 'error')
         return redirect(url_for('index'))
     imei = imei_digits
+
+    # Validar teléfono (opcional): si se ha rellenado debe ser 9 dígitos numéricos
+    if raw_telefono and telefono is None:
+        flash('Teléfono inválido — debe ser numérico de 9 dígitos sin prefijo 34', 'error')
+        return redirect(url_for('index'))
 
     # Comprobar si el IMEI ya está 'entregado' (es decir, no ha sido recepcionado aún)
     if imei:
@@ -545,7 +578,8 @@ def recepcion():
     situm = request.form.get('situm', '').strip()
     usuario = request.form.get('usuario', '').strip()
     imei = request.form.get('imei', '').strip()
-    telefono = format_phone(request.form.get('telefono', '').strip())
+    raw_telefono = request.form.get('telefono', '').strip()
+    telefono = format_phone(raw_telefono)
     notas_telefono = request.form.get('notas_telefono', '').strip()
     tipo = 'recepcion'
     timestamp = datetime.utcnow().isoformat()
@@ -562,6 +596,10 @@ def recepcion():
         flash('IMEI inválido — debe contener exactamente 15 dígitos', 'error')
         return redirect(url_for('index'))
     imei = imei_digits
+    # Validar teléfono (opcional)
+    if raw_telefono and telefono is None:
+        flash('Teléfono inválido — debe ser numérico de 9 dígitos sin prefijo 34', 'error')
+        return redirect(url_for('index'))
     db.execute('INSERT INTO entregas (situm, usuario, imei, telefono, notas_telefono, tipo, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)',
                (situm, usuario, imei, telefono, notas_telefono, tipo, timestamp))
     db.commit()
@@ -572,7 +610,8 @@ def recepcion():
 def incidencia():
     usuario = request.form.get('usuario', '').strip()
     imei = request.form.get('imei', '').strip()
-    telefono = format_phone(request.form.get('telefono', '').strip())
+    raw_telefono = request.form.get('telefono', '').strip()
+    telefono = format_phone(raw_telefono)
     notas = request.form.get('notas', '').strip()
     timestamp = datetime.utcnow().isoformat()
 
@@ -600,6 +639,11 @@ def incidencia():
     
     # Guardar en BD
     db = get_db()
+    # Validar teléfono (opcional)
+    if raw_telefono and telefono is None:
+        flash('Teléfono inválido — debe ser numérico de 9 dígitos sin prefijo 34', 'error')
+        return redirect(url_for('index'))
+
     db.execute('INSERT INTO incidencias (imei, usuario, telefono, notas, archivo_nombre, archivo_contenido, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)',
                (imei, usuario, telefono, notas, archivo_nombre, archivo_contenido, timestamp))
     db.commit()
@@ -791,7 +835,11 @@ def import_file():
             situm = _get_value(r, ['situm', 'SITUM'])
             usuario = _get_value(r, ['usuario', 'user', 'nombre'])
             imei = _get_value(r, ['imei', 'IMEI'])
-            telefono = format_phone(_get_value(r, ['telefono', 'phone', 'telefono_movil']))
+            raw_tel = _get_value(r, ['telefono', 'phone', 'telefono_movil']) or ''
+            telefono = format_phone(raw_tel)
+            if raw_tel and telefono is None:
+                errors.append(f'Fila con IMEI={imei}: teléfono inválido "{raw_tel}"')
+                continue
             notas_telefono = _get_value(r, ['notas_telefono', 'notas', 'notes', 'modelo', 'model'])
             tipo = _get_value(r, ['tipo', 'type']) or 'entrega'
             timestamp = datetime.utcnow().isoformat()

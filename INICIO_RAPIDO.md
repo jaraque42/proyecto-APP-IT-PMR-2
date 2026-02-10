@@ -115,6 +115,16 @@ Solo visualizar:
 
 ## 🆘 Problemas Comunes
 
+## 📞 Formato de Teléfono (rápido)
+Cuando introduzcas un teléfono en los formularios (`Entrega`, `Recepción`, `Incidencias`):
+
+- Acepta un número nacional de 9 dígitos, por ejemplo `600123456`.
+- También se aceptan prefijos internacionales `+34`, `34` o `0034`, y se normalizan automáticamente a 9 dígitos (ej.: `+34600123456` → `600123456`).
+- Si pones un `0` inicial en un número de 10 dígitos (`0600123456`) se quitará el `0` y se guardará como `600123456`.
+- Si rellenas el campo pero el valor no puede normalizarse a un teléfono válido, el formulario mostrará un error.
+
+Esta validación también se aplica durante la importación de CSV/XLSX: las filas con teléfonos inválidos se saltan y se listan como errores en el resultado de importación.
+
 ### "Usuario o contraseña incorrectos"
 - Verifica que escribiste exactamente igual (mayúsculas/minúsculas importan)
 - Comprueba que el usuario está activo en Administración

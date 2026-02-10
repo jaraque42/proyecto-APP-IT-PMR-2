@@ -38,3 +38,14 @@ Archivos CSV o XLSX deben incluir encabezados (case-insensitive):
 - `modelo`
 - `usuario` (requerido)
 - `tipo` (opcional: `entrega` o `recepcion`, por defecto `entrega`)
+
+## Formato de teléfonos aceptado
+El campo `telefono` acepta y normaliza los siguientes formatos:
+
+- Número nacional de 9 dígitos: `600123456`
+- Con prefijo internacional: `+34600123456`, `34600123456` o `0034600123456` → se normaliza a `600123456`
+- Con cero inicial: `0600123456` → se normaliza a `600123456`
+
+Reglas importantes:
+- Si el campo está vacío se permite (no obligatorio en todas las operaciones).
+- Si se rellena, debe contener dígitos válidos según los patrones anteriores; en caso contrario la aplicación rechazará la entrada.
