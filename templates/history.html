@@ -40,13 +40,18 @@
           <label>Usuario: <input type="text" name="usuario" value="{{ usuario_search }}"></label>
           <label>Desde: <input type="date" name="fecha_inicio" value="{{ fecha_inicio }}"></label>
           <label>Hasta: <input type="date" name="fecha_fin" value="{{ fecha_fin }}"></label>
-          <button type="submit" style="padding:8px 16px;background:#f0f0f0;border:1px solid #ccc;border-radius:4px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.1);font-size:14px;color:#000;font-weight:bold">Buscar</button>
-          <a href="/history" style="margin-left:10px;padding:8px 16px;background:#f0f0f0;border:1px solid #ccc;border-radius:4px;text-decoration:none;display:inline-block;box-shadow:0 2px 4px rgba(0,0,0,0.1);font-size:14px;color:#000;font-weight:bold">Limpiar</a>
         </form>
-        <button id="select-all-rows" type="button" style="margin-left:10px;padding:8px 16px;background:#f0f0f0;border:1px solid #ccc;border-radius:4px;cursor:pointer;display:inline-block;box-shadow:0 2px 4px rgba(0,0,0,0.1);font-size:14px;color:#000;font-weight:bold">Seleccionar todo</button>
-        <button id="deselect-all-rows" type="button" style="margin-left:6px;padding:8px 16px;background:#f0f0f0;border:1px solid #ccc;border-radius:4px;cursor:pointer;display:inline-block;box-shadow:0 2px 4px rgba(0,0,0,0.1);font-size:14px;color:#000;font-weight:bold">Deseleccionar</button>
-        <button id="export-all-btn" type="button" style="margin-left:6px;padding:8px 16px;background:#f0f0f0;border:1px solid #ccc;border-radius:4px;cursor:pointer;display:inline-block;box-shadow:0 2px 4px rgba(0,0,0,0.1);font-size:14px;color:#000;font-weight:bold" onclick="const imei = new URLSearchParams(window.location.search).get('imei'); const usuario = new URLSearchParams(window.location.search).get('usuario'); const params = new URLSearchParams(); if(imei) params.set('imei', imei); if(usuario) params.set('usuario', usuario); window.location.href = '/history/export?' + params.toString();">Exportar todo</button>
-        <button id="export-selected-btn" type="button" style="margin-left:6px;padding:8px 16px;background:#f0f0f0;border:1px solid #ccc;border-radius:4px;cursor:pointer;display:inline-block;box-shadow:0 2px 4px rgba(0,0,0,0.1);font-size:14px;color:#000;font-weight:bold">Exp selec</button>
+        <div class="dropdown-menu">
+          <button class="dropdown-toggle" onclick="toggleDropdown(event)">Herramientas ▼</button>
+          <div class="dropdown-content">
+            <button class="dropdown-item" type="button" onclick="document.querySelector('form[action=\"/history\"]').submit(); toggleDropdown(event);">Buscar</button>
+            <a href="/history" class="dropdown-item">Limpiar</a>
+            <button id="select-all-rows" class="dropdown-item" type="button">Seleccionar todo</button>
+            <button id="deselect-all-rows" class="dropdown-item" type="button">Deseleccionar</button>
+            <button id="export-all-btn" class="dropdown-item" type="button" onclick="const imei = new URLSearchParams(window.location.search).get('imei'); const usuario = new URLSearchParams(window.location.search).get('usuario'); const params = new URLSearchParams(); if(imei) params.set('imei', imei); if(usuario) params.set('usuario', usuario); window.location.href = '/history/export?' + params.toString();">Exportar todo</button>
+            <button id="export-selected-btn" class="dropdown-item" type="button">Exp selec</button>
+          </div>
+        </div>
       </div>
       <div style="margin-top:12px">
         <button id="delete-selected-btn" type="button" style="padding:6px 12px;background:#f0f0f0;border:1px solid #ccc;border-radius:4px;cursor:pointer;display:inline-block;box-shadow:0 2px 4px rgba(0,0,0,0.1);font-size:12px;color:#d32f2f;font-weight:bold">Borrar seleccionados</button>

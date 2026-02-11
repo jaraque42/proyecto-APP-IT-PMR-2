@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Recepción Móviles</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <h1><img src="/static/mitie_logo.png" srcset="/static/mitie_logo@2x.png 2x" class="brand-logo" alt="Mitie" width="56" decoding="async">Recepción Móviles</h1>
+      <div style="display:flex;align-items:center;gap:12px">
+        {% if current_user.is_authenticated %}
+          <a class="user-badge" href="/perfil">Operador: {{ current_user.username }}</a>
+        {% endif %}
+        <div>
+          <a class="history-link" href="/">Volver</a>
+          &nbsp;|&nbsp;
+          <a class="history-link" href="/logout">Cerrar Sesión</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="container" style="align-items:stretch;">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <script>window.server_messages = {{ messages | tojson }};</script>
+        {% endif %}
+      {% endwith %}
+
+      <!-- Contenedor de toasts (flotante) -->
+      <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+      <section class="card recepcion">
+        <h2>Recepción de Móviles</h2>
+        <form action="/recepcion" method="post" class="form">
+          <label>Situm<input name="situm" type="email" pattern="^[a-zA-Z0-9._%+-]+@mitie\.es$" placeholder="usuario@mitie.es" title="Email con dominio mitie.es" required></label>
+          <label>Usuario<input name="usuario" required placeholder="Apellido1, Apellido2, Nombre" title="Formato: Apellido1, Apellido2, Nombre"></label>
+          <label>IMEI<input name="imei" required pattern="\d{15}" inputmode="numeric" minlength="15" maxlength="15" placeholder="15 dígitos" title="IMEI de 15 dígitos"></label>
+          <label>Telefono<input name="telefono" pattern="\d{9}" inputmode="tel" minlength="9" maxlength="9" placeholder="9 dígitos (o +34/0034/34)" title="Teléfono: 9 dígitos o con prefijo +34/0034/34"></label>
+          <label>Notas de Telefono<input name="notas_telefono"></label>
+          <div class="actions"><button type="submit" class="btn recepcion">Registrar Recepción</button></div>
+        </form>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+  <div class="bg-logo" aria-hidden="true"></div>
+</html>

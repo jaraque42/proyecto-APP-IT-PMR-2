@@ -394,6 +394,24 @@ def index():
         return redirect(url_for('login'))
     return render_template('index.html')
 
+@app.route('/entrega_moviles', methods=['GET'])
+def entrega_moviles():
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    return render_template('entrega_moviles.html')
+
+@app.route('/recepcion_moviles', methods=['GET'])
+def recepcion_moviles():
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    return render_template('recepcion_moviles.html')
+
+@app.route('/incidencias_moviles', methods=['GET'])
+def incidencias_moviles():
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    return render_template('incidencias_moviles.html')
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
