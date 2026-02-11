@@ -42,6 +42,8 @@
         <form method="get" action="/history" style="display:inline-block;">
           <label>IMEI: <input type="text" name="imei" value="{{ imei_search }}"></label>
           <label>Usuario: <input type="text" name="usuario" value="{{ usuario_search }}"></label>
+          <label>Desde: <input type="date" name="fecha_inicio" value="{{ fecha_inicio }}"></label>
+          <label>Hasta: <input type="date" name="fecha_fin" value="{{ fecha_fin }}"></label>
           <button type="submit" style="padding:8px 16px;background:#f0f0f0;border:1px solid #ccc;border-radius:4px;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.1);font-size:14px;color:#000;font-weight:bold">Buscar</button>
           <a href="/history" style="margin-left:10px;padding:8px 16px;background:#f0f0f0;border:1px solid #ccc;border-radius:4px;text-decoration:none;display:inline-block;box-shadow:0 2px 4px rgba(0,0,0,0.1);font-size:14px;color:#000;font-weight:bold">Limpiar</a>
         </form>

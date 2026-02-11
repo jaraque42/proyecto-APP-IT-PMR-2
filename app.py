@@ -753,6 +753,8 @@ def history():
     db = get_db()
     imei_search = request.args.get('imei', '').strip()
     usuario_search = request.args.get('usuario', '').strip()
+    fecha_inicio = request.args.get('fecha_inicio', '').strip()
+    fecha_fin = request.args.get('fecha_fin', '').strip()
     
     query = 'SELECT * FROM entregas WHERE 1=1'
     params = []
@@ -765,11 +767,19 @@ def history():
         query += ' AND usuario LIKE ?'
         params.append(f'%{usuario_search}%')
     
+    if fecha_inicio:
+        query += ' AND timestamp >= ?'
+        params.append(f'{fecha_inicio}T00:00:00')
+    
+    if fecha_fin:
+        query += ' AND timestamp <= ?'
+        params.append(f'{fecha_fin}T23:59:59')
+    
     query += ' ORDER BY timestamp DESC'
     
     cur = db.execute(query, params)
     rows = cur.fetchall()
-    return render_template('history.html', rows=rows, imei_search=imei_search, usuario_search=usuario_search)
+    return render_template('history.html', rows=rows, imei_search=imei_search, usuario_search=usuario_search, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin)
 
 
 def _get_value(row, keys):
@@ -867,6 +877,8 @@ def incidents():
     db = get_db()
     imei_search = request.args.get('imei', '').strip()
     usuario_search = request.args.get('usuario', '').strip()
+    fecha_inicio = request.args.get('fecha_inicio', '').strip()
+    fecha_fin = request.args.get('fecha_fin', '').strip()
     
     query = 'SELECT * FROM incidencias WHERE 1=1'
     params = []
@@ -879,11 +891,19 @@ def incidents():
         query += ' AND usuario LIKE ?'
         params.append(f'%{usuario_search}%')
     
+    if fecha_inicio:
+        query += ' AND timestamp >= ?'
+        params.append(f'{fecha_inicio}T00:00:00')
+    
+    if fecha_fin:
+        query += ' AND timestamp <= ?'
+        params.append(f'{fecha_fin}T23:59:59')
+    
     query += ' ORDER BY timestamp DESC'
     
     cur = db.execute(query, params)
     incidents = cur.fetchall()
-    return render_template('incidents.html', incidents=incidents, imei_search=imei_search, usuario_search=usuario_search)
+    return render_template('incidents.html', incidents=incidents, imei_search=imei_search, usuario_search=usuario_search, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin)
 
 
 @app.route('/registro/<int:registro_id>/editar', methods=['GET', 'POST'])
