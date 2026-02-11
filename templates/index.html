@@ -18,9 +18,6 @@
           <button id="menu-toggle" class="btn secondary" aria-expanded="false" aria-controls="menu-list" type="button">Opciones ▾</button>
           <div id="menu-list" class="dropdown-content" role="menu">
             <a role="menuitem" href="https://mitie.hexnodemdm.com/login/?next=/#/" target="_blank">Hexnode</a>
-            {% if current_user.is_authenticated %}
-              <a role="menuitem" href="/perfil/cambiar_contrasena">Cambiar clave</a>
-            {% endif %}
             <a role="menuitem" href="/history">Histórico</a>
             <a role="menuitem" href="/incidents">Incidencias</a>
             <a role="menuitem" href="/import">Importar</a>
