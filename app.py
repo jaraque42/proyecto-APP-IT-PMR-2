@@ -108,6 +108,35 @@ def init_db():
         if 'notas' not in user_columns:
             conn.execute('ALTER TABLE usuarios ADD COLUMN notas TEXT')
     
+    # Create usuarios_gtd_sgpmr table if not exists
+    cursor.execute("PRAGMA table_info(usuarios_gtd_sgpmr)")
+    if not cursor.fetchall():
+        conn.execute('''
+            CREATE TABLE usuarios_gtd_sgpmr (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                usuario_gtd TEXT,
+                usuario_sgpmr TEXT,
+                nombre_apellidos TEXT NOT NULL,
+                correo_electronico TEXT,
+                dni_nie TEXT,
+                fecha_creacion TEXT
+            )
+        ''')
+    
+    # Create inventario_telefonos table if not exists
+    cursor.execute("PRAGMA table_info(inventario_telefonos)")
+    if not cursor.fetchall():
+        conn.execute('''
+            CREATE TABLE inventario_telefonos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                imei TEXT NOT NULL,
+                numero_serie TEXT,
+                modelo TEXT,
+                telefono_asociado TEXT,
+                fecha_creacion TEXT
+            )
+        ''')
+    
     conn.commit()
     conn.close()
 
@@ -1094,6 +1123,150 @@ def cambiar_contrasena():
 
     return render_template('cambiar_contrasena.html')
 
+@app.route('/usuarios_gtd_sgpmr')
+@require_permission('registrar')
+def usuarios_gtd_sgpmr():
+    db = get_db()
+    usuarios = db.execute('SELECT * FROM usuarios_gtd_sgpmr ORDER BY fecha_creacion DESC').fetchall()
+    return render_template('usuarios_gtd_sgpmr.html', usuarios=usuarios)
+
+@app.route('/usuarios_gtd_sgpmr/crear', methods=['GET', 'POST'])
+@require_permission('registrar')
+def crear_usuario_gtd_sgpmr():
+    db = get_db()
+    if request.method == 'POST':
+        usuario_gtd = request.form.get('usuario_gtd', '').strip()
+        usuario_sgpmr = request.form.get('usuario_sgpmr', '').strip()
+        nombre_apellidos = request.form.get('nombre_apellidos', '').strip()
+        correo_electronico = request.form.get('correo_electronico', '').strip()
+        dni_nie = request.form.get('dni_nie', '').strip()
+        
+        if not nombre_apellidos:
+            flash('El nombre y apellidos es requerido', 'error')
+            return redirect(url_for('crear_usuario_gtd_sgpmr'))
+        
+        try:
+            db.execute('''
+                INSERT INTO usuarios_gtd_sgpmr (usuario_gtd, usuario_sgpmr, nombre_apellidos, correo_electronico, dni_nie, fecha_creacion)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (usuario_gtd or None, usuario_sgpmr or None, nombre_apellidos, correo_electronico or None, dni_nie or None, datetime.utcnow().isoformat()))
+            db.commit()
+            flash('Usuario creado correctamente', 'success')
+            return redirect(url_for('usuarios_gtd_sgpmr'))
+        except sqlite3.IntegrityError as e:
+            flash(f'Error al crear usuario: {str(e)}', 'error')
+            return redirect(url_for('crear_usuario_gtd_sgpmr'))
+    
+    return render_template('crear_usuario_gtd_sgpmr.html')
+
+@app.route('/usuarios_gtd_sgpmr/<int:usuario_id>/editar', methods=['GET', 'POST'])
+@require_permission('registrar')
+def editar_usuario_gtd_sgpmr(usuario_id):
+    db = get_db()
+    usuario = db.execute('SELECT * FROM usuarios_gtd_sgpmr WHERE id = ?', (usuario_id,)).fetchone()
+    
+    if not usuario:
+        flash('Usuario no encontrado', 'error')
+        return redirect(url_for('usuarios_gtd_sgpmr'))
+    
+    if request.method == 'POST':
+        usuario_gtd = request.form.get('usuario_gtd', '').strip()
+        usuario_sgpmr = request.form.get('usuario_sgpmr', '').strip()
+        nombre_apellidos = request.form.get('nombre_apellidos', '').strip()
+        correo_electronico = request.form.get('correo_electronico', '').strip()
+        dni_nie = request.form.get('dni_nie', '').strip()
+        
+        if not nombre_apellidos:
+            flash('El nombre y apellidos es requerido', 'error')
+            return redirect(url_for('editar_usuario_gtd_sgpmr', usuario_id=usuario_id))
+        
+        try:
+            db.execute('''
+                UPDATE usuarios_gtd_sgpmr
+                SET usuario_gtd = ?, usuario_sgpmr = ?, nombre_apellidos = ?, correo_electronico = ?, dni_nie = ?
+                WHERE id = ?
+            ''', (usuario_gtd or None, usuario_sgpmr or None, nombre_apellidos, correo_electronico or None, dni_nie or None, usuario_id))
+            db.commit()
+            flash('Usuario actualizado correctamente', 'success')
+            return redirect(url_for('usuarios_gtd_sgpmr'))
+        except sqlite3.IntegrityError as e:
+            flash(f'Error al actualizar usuario: {str(e)}', 'error')
+            return redirect(url_for('editar_usuario_gtd_sgpmr', usuario_id=usuario_id))
+    
+    return render_template('editar_usuario_gtd_sgpmr.html', usuario=usuario)
+
+@app.route('/usuarios_gtd_sgpmr/<int:usuario_id>/eliminar', methods=['POST'])
+@require_permission('registrar')
+def eliminar_usuario_gtd_sgpmr(usuario_id):
+    db = get_db()
+    db.execute('DELETE FROM usuarios_gtd_sgpmr WHERE id = ?', (usuario_id,))
+    db.commit()
+    flash('Usuario eliminado correctamente', 'success')
+    return redirect(url_for('usuarios_gtd_sgpmr'))
+
+@app.route('/usuarios_gtd_sgpmr/importar', methods=['GET', 'POST'])
+@require_permission('registrar')
+def importar_usuarios_gtd_sgpmr():
+    db = get_db()
+    if request.method == 'POST':
+        if 'archivo' not in request.files:
+            flash('No se seleccionó archivo', 'error')
+            return redirect(url_for('importar_usuarios_gtd_sgpmr'))
+        
+        archivo = request.files['archivo']
+        if archivo.filename == '':
+            flash('No se seleccionó archivo', 'error')
+            return redirect(url_for('importar_usuarios_gtd_sgpmr'))
+        
+        try:
+            if archivo.filename.endswith('.csv'):
+                stream = io.StringIO(archivo.stream.read().decode('UTF-8'))
+                csv_data = list(csv.DictReader(stream))
+            elif archivo.filename.endswith('.xlsx'):
+                wb = load_workbook(archivo.stream)
+                ws = wb.active
+                headers = [cell.value for cell in ws[1]]
+                csv_data = []
+                for row in ws.iter_rows(min_row=2, values_only=True):
+                    csv_data.append(dict(zip(headers, row)))
+            else:
+                flash('Formato no soportado. Use CSV o XLSX', 'error')
+                return redirect(url_for('importar_usuarios_gtd_sgpmr'))
+            
+            inserted = 0
+            errors = []
+            for idx, row in enumerate(csv_data, 2):
+                try:
+                    usuario_gtd = str(row.get('usuario_gtd') or '').strip() or None
+                    usuario_sgpmr = str(row.get('usuario_sgpmr') or '').strip() or None
+                    nombre_apellidos = str(row.get('nombre_apellidos') or '').strip()
+                    correo_electronico = str(row.get('correo_electronico') or '').strip() or None
+                    dni_nie = str(row.get('dni_nie') or '').strip() or None
+                    
+                    if not nombre_apellidos:
+                        errors.append(f"Fila {idx}: nombre_apellidos es requerido")
+                        continue
+                    
+                    db.execute('''
+                        INSERT INTO usuarios_gtd_sgpmr (usuario_gtd, usuario_sgpmr, nombre_apellidos, correo_electronico, dni_nie, fecha_creacion)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    ''', (usuario_gtd, usuario_sgpmr, nombre_apellidos, correo_electronico, dni_nie, datetime.utcnow().isoformat()))
+                    inserted += 1
+                except sqlite3.IntegrityError as e:
+                    errors.append(f"Fila {idx}: {str(e)}")
+            
+            db.commit()
+            flash(f'Se importaron {inserted} usuarios correctamente. Errores: {len(errors)}', 'success' if inserted > 0 else 'warning')
+            if errors:
+                for error in errors[:10]:
+                    flash(error, 'error')
+            return redirect(url_for('usuarios_gtd_sgpmr'))
+        except Exception as e:
+            flash(f'Error al procesar archivo: {str(e)}', 'error')
+            return redirect(url_for('importar_usuarios_gtd_sgpmr'))
+    
+    return render_template('importar_usuarios_gtd_sgpmr.html')
+
 @app.route('/incidents/delete-selected', methods=['POST'])
 @require_permission('borrar_registros')
 def delete_selected_incidents():
@@ -1130,6 +1303,147 @@ def download_incident_file(incident_id):
         as_attachment=True,
         download_name=incident['archivo_nombre']
     )
+
+@app.route('/inventario_telefonos')
+@require_permission('registrar')
+def inventario_telefonos():
+    db = get_db()
+    telefonos = db.execute('SELECT * FROM inventario_telefonos ORDER BY fecha_creacion DESC').fetchall()
+    return render_template('inventario_telefonos.html', telefonos=telefonos)
+
+@app.route('/inventario_telefonos/crear', methods=['GET', 'POST'])
+@require_permission('registrar')
+def crear_inventario_telefonos():
+    db = get_db()
+    if request.method == 'POST':
+        imei = request.form.get('imei', '').strip()
+        numero_serie = request.form.get('numero_serie', '').strip()
+        modelo = request.form.get('modelo', '').strip()
+        telefono_asociado = request.form.get('telefono_asociado', '').strip()
+        
+        if not imei:
+            flash('El IMEI es requerido', 'error')
+            return redirect(url_for('crear_inventario_telefonos'))
+        
+        try:
+            db.execute('''
+                INSERT INTO inventario_telefonos (imei, numero_serie, modelo, telefono_asociado, fecha_creacion)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (imei, numero_serie or None, modelo or None, telefono_asociado or None, datetime.utcnow().isoformat()))
+            db.commit()
+            flash('Teléfono registrado correctamente', 'success')
+            return redirect(url_for('inventario_telefonos'))
+        except sqlite3.IntegrityError as e:
+            flash(f'Error al registrar teléfono: {str(e)}', 'error')
+            return redirect(url_for('crear_inventario_telefonos'))
+    
+    return render_template('crear_inventario_telefonos.html')
+
+@app.route('/inventario_telefonos/<int:telefono_id>/editar', methods=['GET', 'POST'])
+@require_permission('registrar')
+def editar_inventario_telefonos(telefono_id):
+    db = get_db()
+    telefono = db.execute('SELECT * FROM inventario_telefonos WHERE id = ?', (telefono_id,)).fetchone()
+    
+    if not telefono:
+        flash('Teléfono no encontrado', 'error')
+        return redirect(url_for('inventario_telefonos'))
+    
+    if request.method == 'POST':
+        imei = request.form.get('imei', '').strip()
+        numero_serie = request.form.get('numero_serie', '').strip()
+        modelo = request.form.get('modelo', '').strip()
+        telefono_asociado = request.form.get('telefono_asociado', '').strip()
+        
+        if not imei:
+            flash('El IMEI es requerido', 'error')
+            return redirect(url_for('editar_inventario_telefonos', telefono_id=telefono_id))
+        
+        try:
+            db.execute('''
+                UPDATE inventario_telefonos
+                SET imei = ?, numero_serie = ?, modelo = ?, telefono_asociado = ?
+                WHERE id = ?
+            ''', (imei, numero_serie or None, modelo or None, telefono_asociado or None, telefono_id))
+            db.commit()
+            flash('Teléfono actualizado correctamente', 'success')
+            return redirect(url_for('inventario_telefonos'))
+        except sqlite3.IntegrityError as e:
+            flash(f'Error al actualizar teléfono: {str(e)}', 'error')
+            return redirect(url_for('editar_inventario_telefonos', telefono_id=telefono_id))
+    
+    return render_template('editar_inventario_telefonos.html', telefono=telefono)
+
+@app.route('/inventario_telefonos/<int:telefono_id>/eliminar', methods=['POST'])
+@require_permission('registrar')
+def eliminar_inventario_telefonos(telefono_id):
+    db = get_db()
+    db.execute('DELETE FROM inventario_telefonos WHERE id = ?', (telefono_id,))
+    db.commit()
+    flash('Teléfono eliminado correctamente', 'success')
+    return redirect(url_for('inventario_telefonos'))
+
+@app.route('/inventario_telefonos/importar', methods=['GET', 'POST'])
+@require_permission('registrar')
+def importar_inventario_telefonos():
+    db = get_db()
+    if request.method == 'POST':
+        if 'archivo' not in request.files:
+            flash('No se seleccionó archivo', 'error')
+            return redirect(url_for('importar_inventario_telefonos'))
+        
+        archivo = request.files['archivo']
+        if archivo.filename == '':
+            flash('No se seleccionó archivo', 'error')
+            return redirect(url_for('importar_inventario_telefonos'))
+        
+        try:
+            if archivo.filename.endswith('.csv'):
+                stream = io.StringIO(archivo.stream.read().decode('UTF-8'))
+                csv_data = list(csv.DictReader(stream))
+            elif archivo.filename.endswith('.xlsx'):
+                wb = load_workbook(archivo.stream)
+                ws = wb.active
+                headers = [cell.value for cell in ws[1]]
+                csv_data = []
+                for row in ws.iter_rows(min_row=2, values_only=True):
+                    csv_data.append(dict(zip(headers, row)))
+            else:
+                flash('Formato no soportado. Use CSV o XLSX', 'error')
+                return redirect(url_for('importar_inventario_telefonos'))
+            
+            inserted = 0
+            errors = []
+            for idx, row in enumerate(csv_data, 2):
+                try:
+                    imei = str(row.get('imei') or '').strip()
+                    numero_serie = str(row.get('numero_serie') or '').strip() or None
+                    modelo = str(row.get('modelo') or '').strip() or None
+                    telefono_asociado = str(row.get('telefono_asociado') or '').strip() or None
+                    
+                    if not imei:
+                        errors.append(f"Fila {idx}: IMEI es requerido")
+                        continue
+                    
+                    db.execute('''
+                        INSERT INTO inventario_telefonos (imei, numero_serie, modelo, telefono_asociado, fecha_creacion)
+                        VALUES (?, ?, ?, ?, ?)
+                    ''', (imei, numero_serie, modelo, telefono_asociado, datetime.utcnow().isoformat()))
+                    inserted += 1
+                except sqlite3.IntegrityError as e:
+                    errors.append(f"Fila {idx}: {str(e)}")
+            
+            db.commit()
+            flash(f'Se importaron {inserted} teléfonos correctamente. Errores: {len(errors)}', 'success' if inserted > 0 else 'warning')
+            if errors:
+                for error in errors[:10]:
+                    flash(error, 'error')
+            return redirect(url_for('inventario_telefonos'))
+        except Exception as e:
+            flash(f'Error al procesar archivo: {str(e)}', 'error')
+            return redirect(url_for('importar_inventario_telefonos'))
+    
+    return render_template('importar_inventario_telefonos.html')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

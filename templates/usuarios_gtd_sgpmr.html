@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Usuarios GTD SGPMR</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+      .header-actions { display: flex; gap: 10px; margin-bottom: 20px; }
+      .btn-secondary { background: #667eea; color: white; padding: 10px 16px; border: none; border-radius: 6px; text-decoration: none; cursor: pointer; display: inline-block; }
+      .btn-secondary:hover { background: #5568d3; }
+      .btn-small { padding: 6px 12px; font-size: 12px; }
+      .table-container { overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+      thead { background: #667eea; color: white; }
+      th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e7e7e7; }
+      tbody tr:hover { background: #f9f9ff; }
+      .actions { display: flex; gap: 6px; }
+      .btn-danger { background: #d32f2f; color: white; }
+      .btn-danger:hover { background: #b71c1c; }
+    </style>
+  </head>
+  <body>
+    <div class="bg-logo" aria-hidden="true"></div>
+    <header class="topbar">
+      <h1><img src="/static/mitie_logo.png" srcset="/static/mitie_logo@2x.png 2x" class="brand-logo" alt="Mitie" width="56" decoding="async">Usuarios GTD SGPMR</h1>
+      <div style="display:flex;align-items:center;gap:12px">
+        {% if current_user.is_authenticated %}
+          <a class="user-badge" href="/perfil">Operador: {{ current_user.username }}</a>
+        {% endif %}
+        <div>
+          <a class="history-link" href="/">Volver</a>
+          &nbsp;|&nbsp;
+          <a class="history-link" href="/logout">Cerrar Sesión</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="container" style="flex-direction: column; height: auto; padding: 24px;">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <script>window.server_messages = {{ messages | tojson }};</script>
+        {% endif %}
+      {% endwith %}
+
+      <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+      <div class="header-actions">
+        <a href="/usuarios_gtd_sgpmr/crear" class="btn-secondary">+ Crear Usuario</a>
+        <a href="/usuarios_gtd_sgpmr/importar" class="btn-secondary">📥 Importar</a>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Usuario GTD</th>
+              <th>Usuario SGPMR</th>
+              <th>Nombre y Apellidos</th>
+              <th>Correo Electrónico</th>
+              <th>DNI/NIE</th>
+              <th>Fecha Creación</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for usuario in usuarios %}
+              <tr>
+                <td>{{ usuario['usuario_gtd'] or '-' }}</td>
+                <td>{{ usuario['usuario_sgpmr'] or '-' }}</td>
+                <td>{{ usuario['nombre_apellidos'] }}</td>
+                <td>{{ usuario['correo_electronico'] or '-' }}</td>
+                <td>{{ usuario['dni_nie'] or '-' }}</td>
+                <td>{{ usuario['fecha_creacion'][:10] if usuario['fecha_creacion'] else '-' }}</td>
+                <td>
+                  <div class="actions">
+                    <a href="/usuarios_gtd_sgpmr/{{ usuario['id'] }}/editar" class="btn-secondary btn-small">Editar</a>
+                    <form method="post" action="/usuarios_gtd_sgpmr/{{ usuario['id'] }}/eliminar" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este usuario?');">
+                      <button type="submit" class="btn-secondary btn-small btn-danger">Eliminar</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="7" style="text-align: center; color: #999;">No hay usuarios registrados</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

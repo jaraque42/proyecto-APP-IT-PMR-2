@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Importar Teléfonos - Inventario</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="logo">APP-IT-PMR</a>
+            <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+            <div class="dropdown-content" id="menu">
+                <a role="menuitem" href="/history">Histórico</a>
+                <a role="menuitem" href="/incidents">Incidencias</a>
+                <a role="menuitem" href="/import">Importar</a>
+                {% if current_user.is_authenticated %}
+                  <a role="menuitem" href="/usuarios_gtd_sgpmr">Usuarios GTD SGPMR</a>
+                  <a role="menuitem" href="/inventario_telefonos">Inventario de Teléfonos</a>
+                {% endif %}
+                {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
+                  <a role="menuitem" href="/administracion">Administración</a>
+                {% endif %}
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('perfil') }}" class="user-badge">👤 {{ current_user.username }}</a>
+                    <a role="menuitem" href="{{ url_for('logout') }}">Cerrar sesión</a>
+                {% else %}
+                    <a role="menuitem" href="{{ url_for('login') }}">Iniciar sesión</a>
+                {% endif %}
+                <div class="external-buttons">
+                    <a href="https://mitie.hexnodemdm.com/login/?next=/#/" target="_blank" class="external-btn">Hexnode</a>
+                    <a href="https://dashboard.situm.com/" target="_blank" class="external-btn">Situm</a>
+                    <a href="https://pmr-aena.gtd.systems/pmr" target="_blank" class="external-btn">GTD</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="toast toast-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h1>Importar Teléfonos</h1>
+
+        <div class="form-container">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="archivo">Selecciona archivo CSV o XLSX:</label>
+                    <input type="file" id="archivo" name="archivo" accept=".csv,.xlsx" required>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Importar</button>
+                    <a href="{{ url_for('inventario_telefonos') }}" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="info-box">
+            <h3>Formato requerido:</h3>
+            <p>El archivo debe contener las siguientes columnas (en el mismo orden):</p>
+            <ul>
+                <li><strong>imei</strong> (requerido)</li>
+                <li><strong>numero_serie</strong> (opcional)</li>
+                <li><strong>modelo</strong> (opcional)</li>
+                <li><strong>telefono_asociado</strong> (opcional)</li>
+            </ul>
+        </div>
+
+        <div class="info-box">
+            <h3>Ejemplo CSV:</h3>
+            <pre>imei,numero_serie,modelo,telefono_asociado
+355535055245641,SN123456789,iPhone 13,+34-600-123456
+355535055245642,SN123456790,Samsung A52,+34-600-123457
+355535055245643,SN123456791,Xiaomi 12,+34-600-123458</pre>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

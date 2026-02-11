@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Importar Usuarios GTD SGPMR</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+      .form-container { max-width: 600px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin: 20px auto; }
+      .form-container h2 { margin-bottom: 20px; color: #333; }
+      .info-box { background: #f0f9ff; border-left: 4px solid #667eea; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
+      .info-box p { margin: 8px 0; font-size: 14px; color: #333; }
+      .form-group { margin-bottom: 20px; }
+      .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: #555; }
+      .form-group input { width: 100%; padding: 10px; border: 1px solid #e7e7e7; border-radius: 6px; font-size: 14px; }
+      .form-group input:focus { outline: none; border-color: #667eea; background: #f9f9ff; }
+      .form-actions { display: flex; gap: 10px; margin-top: 30px; }
+      .btn { flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+      .btn-primary { background: #667eea; color: white; }
+      .btn-primary:hover { background: #5568d3; }
+      .btn-secondary { background: #e7e7e7; color: #333; }
+      .btn-secondary:hover { background: #d7d7d7; }
+      .template { margin-top: 20px; padding: 15px; background: #fafafa; border-radius: 6px; }
+      .template h4 { margin-top: 0; }
+      .template pre { overflow-x: auto; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <div class="bg-logo" aria-hidden="true"></div>
+    <header class="topbar">
+      <h1><img src="/static/mitie_logo.png" srcset="/static/mitie_logo@2x.png 2x" class="brand-logo" alt="Mitie" width="56" decoding="async">Importar Usuarios GTD SGPMR</h1>
+      <div>
+        <a class="history-link" href="/usuarios_gtd_sgpmr">Volver</a>
+        &nbsp;|&nbsp;
+        <a class="history-link" href="/logout">Cerrar Sesión</a>
+      </div>
+    </header>
+
+    <main class="container" style="flex-direction: column; height: auto;">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <script>window.server_messages = {{ messages | tojson }};</script>
+        {% endif %}
+      {% endwith %}
+
+      <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+      <div class="form-container">
+        <h2>Importar Usuario GTD SGPMR</h2>
+        
+        <div class="info-box">
+          <p><strong>ℹ️ Formato soportado:</strong> CSV o XLSX (Excel)</p>
+          <p><strong>Columnas requeridas:</strong></p>
+          <ul style="margin: 8px 0; padding-left: 20px;">
+            <li>nombre_apellidos (requerido)</li>
+            <li>usuario_gtd (opcional)</li>
+            <li>usuario_sgpmr (opcional)</li>
+            <li>correo_electronico (opcional)</li>
+            <li>dni_nie (opcional)</li>
+          </ul>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+          <div class="form-group">
+            <label>Selecciona archivo (CSV o XLSX)</label>
+            <input type="file" name="archivo" accept=".csv,.xlsx" required>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Importar</button>
+            <a href="/usuarios_gtd_sgpmr" class="btn btn-secondary" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Cancelar</a>
+          </div>
+        </form>
+
+        <div class="template">
+          <h4>Ejemplo CSV:</h4>
+          <pre>nombre_apellidos,usuario_gtd,usuario_sgpmr,correo_electronico,dni_nie
+"Pérez García, Juan",user_gtd_1,user_sgpmr_1,juan@example.com,12345678A
+"López Martínez, María",user_gtd_2,user_sgpmr_2,maria@example.com,87654321B</pre>
+        </div>
+      </div>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Teléfono - Inventario</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="logo">APP-IT-PMR</a>
+            <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+            <div class="dropdown-content" id="menu">
+                <a role="menuitem" href="/history">Histórico</a>
+                <a role="menuitem" href="/incidents">Incidencias</a>
+                <a role="menuitem" href="/import">Importar</a>
+                {% if current_user.is_authenticated %}
+                  <a role="menuitem" href="/usuarios_gtd_sgpmr">Usuarios GTD SGPMR</a>
+                  <a role="menuitem" href="/inventario_telefonos">Inventario de Teléfonos</a>
+                {% endif %}
+                {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
+                  <a role="menuitem" href="/administracion">Administración</a>
+                {% endif %}
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('perfil') }}" class="user-badge">👤 {{ current_user.username }}</a>
+                    <a role="menuitem" href="{{ url_for('logout') }}">Cerrar sesión</a>
+                {% else %}
+                    <a role="menuitem" href="{{ url_for('login') }}">Iniciar sesión</a>
+                {% endif %}
+                <div class="external-buttons">
+                    <a href="https://mitie.hexnodemdm.com/login/?next=/#/" target="_blank" class="external-btn">Hexnode</a>
+                    <a href="https://dashboard.situm.com/" target="_blank" class="external-btn">Situm</a>
+                    <a href="https://pmr-aena.gtd.systems/pmr" target="_blank" class="external-btn">GTD</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="toast toast-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h1>Editar Teléfono</h1>
+
+        {% if telefono %}
+            <div class="info-box">
+                <p><strong>ID:</strong> {{ telefono['id'] }}</p>
+                <p><strong>Fecha Creación:</strong> {{ telefono['fecha_creacion'][:10] if telefono['fecha_creacion'] else '-' }}</p>
+            </div>
+
+            <div class="form-container">
+                <form method="POST">
+                    <div class="form-group">
+                        <label for="imei">IMEI *</label>
+                        <input type="text" id="imei" name="imei" value="{{ telefono['imei'] }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="numero_serie">Número Serie</label>
+                        <input type="text" id="numero_serie" name="numero_serie" value="{{ telefono['numero_serie'] or '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="modelo">Modelo</label>
+                        <input type="text" id="modelo" name="modelo" value="{{ telefono['modelo'] or '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="telefono_asociado">Teléfono Asociado</label>
+                        <input type="text" id="telefono_asociado" name="telefono_asociado" value="{{ telefono['telefono_asociado'] or '' }}">
+                    </div>
+
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                        <a href="{{ url_for('inventario_telefonos') }}" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        {% else %}
+            <p class="error">Teléfono no encontrado</p>
+        {% endif %}
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

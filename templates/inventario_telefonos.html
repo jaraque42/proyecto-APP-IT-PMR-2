@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventario de Teléfonos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="/" class="logo">APP-IT-PMR</a>
+            <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+            <div class="dropdown-content" id="menu">
+                <a role="menuitem" href="/history">Histórico</a>
+                <a role="menuitem" href="/incidents">Incidencias</a>
+                <a role="menuitem" href="/import">Importar</a>
+                {% if current_user.is_authenticated %}
+                  <a role="menuitem" href="/usuarios_gtd_sgpmr">Usuarios GTD SGPMR</a>
+                  <a role="menuitem" href="/inventario_telefonos">Inventario de Teléfonos</a>
+                {% endif %}
+                {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
+                  <a role="menuitem" href="/administracion">Administración</a>
+                {% endif %}
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('perfil') }}" class="user-badge">👤 {{ current_user.username }}</a>
+                    <a role="menuitem" href="{{ url_for('logout') }}">Cerrar sesión</a>
+                {% else %}
+                    <a role="menuitem" href="{{ url_for('login') }}">Iniciar sesión</a>
+                {% endif %}
+                <div class="external-buttons">
+                    <a href="https://mitie.hexnodemdm.com/login/?next=/#/" target="_blank" class="external-btn">Hexnode</a>
+                    <a href="https://dashboard.situm.com/" target="_blank" class="external-btn">Situm</a>
+                    <a href="https://pmr-aena.gtd.systems/pmr" target="_blank" class="external-btn">GTD</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="toast toast-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <h1>Inventario de Teléfonos</h1>
+        
+        <div style="margin-bottom: 20px;">
+            <a href="{{ url_for('crear_inventario_telefonos') }}" class="btn btn-primary">➕ Crear Teléfono</a>
+            <a href="{{ url_for('importar_inventario_telefonos') }}" class="btn btn-secondary">📥 Importar</a>
+        </div>
+
+        {% if telefonos %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>IMEI</th>
+                        <th>Número Serie</th>
+                        <th>Modelo</th>
+                        <th>Teléfono Asociado</th>
+                        <th>Fecha Creación</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for telefono in telefonos %}
+                        <tr>
+                            <td>{{ telefono['imei'] }}</td>
+                            <td>{{ telefono['numero_serie'] or '-' }}</td>
+                            <td>{{ telefono['modelo'] or '-' }}</td>
+                            <td>{{ telefono['telefono_asociado'] or '-' }}</td>
+                            <td>{{ telefono['fecha_creacion'][:10] if telefono['fecha_creacion'] else '-' }}</td>
+                            <td>
+                                <a href="{{ url_for('editar_inventario_telefonos', telefono_id=telefono['id']) }}" class="btn btn-small btn-edit">✏️ Editar</a>
+                                <form method="POST" action="{{ url_for('eliminar_inventario_telefonos', telefono_id=telefono['id']) }}" style="display:inline;">
+                                    <button type="submit" class="btn btn-small btn-delete" onclick="return confirm('¿Estás seguro de que deseas eliminar este teléfono?')">🗑️ Eliminar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="no-records">No hay teléfonos registrados</p>
+        {% endif %}
+    </div>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
