@@ -110,6 +110,24 @@
       .user-info p {
         margin: 5px 0;
       }
+      .role-summary {
+        background: #f8f9ff;
+        border: 1px solid #e6e9ff;
+        border-radius: 6px;
+        padding: 12px;
+        margin-top: 10px;
+      }
+      .role-summary h3 {
+        margin: 0 0 8px;
+        font-size: 14px;
+        color: #333;
+      }
+      .role-summary ul {
+        margin: 0;
+        padding-left: 18px;
+        color: #555;
+        font-size: 13px;
+      }
     </style>
   </head>
   <body>
@@ -118,7 +136,7 @@
       <h1><img src="/static/mitie_logo.png" srcset="/static/mitie_logo@2x.png 2x" class="brand-logo" alt="Mitie" width="56" decoding="async">Editar Usuario</h1>
       <div style="display:flex;align-items:center;gap:12px">
         {% if current_user.is_authenticated %}
-          <div class="user-badge">Operador: {{ current_user.username }}</div>
+          <a class="user-badge" href="/perfil">Operador: {{ current_user.username }}</a>
         {% endif %}
         <div>
           <a class="history-link" href="/administracion">Atrás</a>
@@ -170,6 +188,10 @@
                   {% endfor %}
                 {% endif %}
               </select>
+              <div class="role-summary" aria-live="polite">
+                <h3>Funciones principales</h3>
+                <ul id="role-functions"></ul>
+              </div>
             </div>
 
             <div class="form-group">
@@ -192,5 +214,33 @@
         {% endif %}
       </div>
     </main>
+
+    <script>
+      const roleFunctions = {{ roles_permisos | tojson }};
+      const roleSelect = document.getElementById('rol');
+      const functionsList = document.getElementById('role-functions');
+
+      function renderRoleFunctions(role) {
+        functionsList.innerHTML = '';
+        const functions = roleFunctions[role] || [];
+        functions.forEach(function (fn) {
+          const item = document.createElement('li');
+          item.textContent = fn.replace(/_/g, ' ');
+          functionsList.appendChild(item);
+        });
+        if (functions.length === 0) {
+          const item = document.createElement('li');
+          item.textContent = 'Sin funciones asignadas';
+          functionsList.appendChild(item);
+        }
+      }
+
+      if (roleSelect) {
+        renderRoleFunctions(roleSelect.value);
+        roleSelect.addEventListener('change', function (event) {
+          renderRoleFunctions(event.target.value);
+        });
+      }
+    </script>
   </body>
 </html>

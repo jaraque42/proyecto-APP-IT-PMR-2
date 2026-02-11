@@ -131,7 +131,7 @@ body.dark .dropdown-content{background:#121416;color:#e9edf0;border:1px solid #2
 body.dark .dropdown-content a{border-bottom-color:#222}
 
 /* User badge in header */
-.user-badge{margin-left:16px;padding:6px 10px;background:rgba(255,255,255,0.12);color:#fff;border-radius:8px;font-weight:700;font-size:14px}
+.user-badge{margin-left:16px;padding:6px 10px;background:rgba(255,255,255,0.12);color:#fff;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;display:inline-block;cursor:pointer}
 body.dark .user-badge{background:rgba(255,255,255,0.06);color:#e9edf0}
 
 /* Password preview toggle */

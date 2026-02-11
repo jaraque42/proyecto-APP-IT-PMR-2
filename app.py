@@ -87,7 +87,8 @@ def init_db():
     
     # Create usuarios table if not exists
     cursor.execute("PRAGMA table_info(usuarios)")
-    if not cursor.fetchall():
+    user_columns = [column[1] for column in cursor.fetchall()]
+    if not user_columns:
         conn.execute('''
             CREATE TABLE usuarios (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -95,13 +96,17 @@ def init_db():
                 password TEXT NOT NULL,
                 rol TEXT NOT NULL,
                 activo INTEGER DEFAULT 1,
-                fecha_creacion TEXT
+                fecha_creacion TEXT,
+                notas TEXT
             )
         ''')
         # Crear usuario admin por defecto
         admin_password = generate_password_hash('admin123')
         conn.execute('INSERT INTO usuarios (username, password, rol, activo, fecha_creacion) VALUES (?, ?, ?, ?, ?)',
                     ('admin', admin_password, 'admin', 1, datetime.utcnow().isoformat()))
+    else:
+        if 'notas' not in user_columns:
+            conn.execute('ALTER TABLE usuarios ADD COLUMN notas TEXT')
     
     conn.commit()
     conn.close()
@@ -461,7 +466,12 @@ def editar_usuario(usuario_id):
         flash(f'Usuario actualizado correctamente', 'success')
         return redirect(url_for('administracion'))
     
-    return render_template('editar_usuario.html', usuario=usuario, roles=ROLES_PERMISOS.keys())
+    return render_template(
+        'editar_usuario.html',
+        usuario=usuario,
+        roles=ROLES_PERMISOS.keys(),
+        roles_permisos=ROLES_PERMISOS,
+    )
 
 
 @app.route('/usuarios/<int:usuario_id>/cambiar_contrasena', methods=['GET', 'POST'])
@@ -1003,6 +1013,25 @@ def export_incidents():
     return send_file(bio, as_attachment=True, download_name='incidencias.xlsx', mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 
+@app.route('/perfil', methods=['GET', 'POST'])
+@login_required
+def perfil():
+    db = get_db()
+
+    if request.method == 'POST':
+        notas = request.form.get('notas', '').strip()
+        db.execute('UPDATE usuarios SET notas = ? WHERE id = ?', (notas, current_user.id))
+        db.commit()
+        flash('Notas actualizadas correctamente', 'success')
+        return redirect(url_for('perfil'))
+
+    usuario = db.execute(
+        'SELECT id, username, rol, notas, fecha_creacion FROM usuarios WHERE id = ?',
+        (current_user.id,)
+    ).fetchone()
+    return render_template('perfil.html', usuario=usuario)
+
+
 @app.route('/perfil/cambiar_contrasena', methods=['GET', 'POST'])
 @login_required
 def cambiar_contrasena():
@@ -1041,7 +1070,7 @@ def cambiar_contrasena():
         db.execute('UPDATE usuarios SET password = ? WHERE id = ?', (new_hash, current_user.id))
         db.commit()
         flash('Contraseña actualizada correctamente', 'success')
-        return redirect(url_for('administracion'))
+        return redirect(url_for('perfil'))
 
     return render_template('cambiar_contrasena.html')
 

@@ -11,7 +11,7 @@
       <h1>Editar incidencia #{{ i['id'] }}</h1>
       <div style="display:flex;align-items:center;gap:12px">
         {% if current_user.is_authenticated %}
-          <div class="user-badge">Operador: {{ current_user.username }}</div>
+          <a class="user-badge" href="/perfil">Operador: {{ current_user.username }}</a>
         {% endif %}
         <div><a class="history-link" href="/incidents">Volver</a></div>
       </div>
