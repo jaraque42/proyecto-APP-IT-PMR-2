@@ -712,12 +712,12 @@ def clear_history():
     
     # Verificar contraseña
     if password != '4j_6WbTT7scyicJcam':
-        return redirect(url_for('history') + '?error=Invalid password')
+        return redirect(url_for('history_entrega') + '?error=Invalid password')
     
     db = get_db()
     db.execute('DELETE FROM entregas')
     db.commit()
-    return redirect(url_for('history'))
+    return redirect(url_for('history_entrega'))
 
 
 @app.route('/history/delete-selected', methods=['POST'])
@@ -729,7 +729,7 @@ def delete_selected():
     
     # Verificar contraseña
     if password != '4j_6WbTT7scyicJcam':
-        return redirect(url_for('history') + '?error=Invalid password')
+        return redirect(url_for('history_entrega') + '?error=Invalid password')
     
     if ids_param:
         id_list = [int(i) for i in ids_param.split(',') if i.strip().isdigit()]
@@ -739,12 +739,17 @@ def delete_selected():
             db.execute(f'DELETE FROM entregas WHERE id IN ({placeholders})', id_list)
             db.commit()
     
-    return redirect(url_for('history'))
+    return redirect(url_for('history_entrega'))
 
 
 @app.route('/history/export')
 @require_permission('ver_historico')
 def export_history():
+    return redirect(url_for('export_history_entrega'))
+
+@app.route('/history_entrega/export')
+@require_permission('ver_historico')
+def export_history_entrega():
     db = get_db()
     imei_search = request.args.get('imei', '').strip()
     usuario_search = request.args.get('usuario', '').strip()
@@ -757,11 +762,11 @@ def export_history():
             rows = []
         else:
             placeholders = ','.join(['?'] * len(id_list))
-            query = f'SELECT id, tipo, situm, usuario, imei, telefono, notas_telefono, timestamp FROM entregas WHERE id IN ({placeholders}) ORDER BY timestamp DESC'
+            query = f'SELECT id, tipo, situm, usuario, imei, telefono, notas_telefono, timestamp FROM entregas WHERE LOWER(tipo) IN ("entrega", "entregas") AND id IN ({placeholders}) ORDER BY timestamp DESC'
             cur = db.execute(query, id_list)
             rows = cur.fetchall()
     else:
-        query = 'SELECT id, tipo, situm, usuario, imei, telefono, notas_telefono, timestamp FROM entregas WHERE 1=1'
+        query = 'SELECT id, tipo, situm, usuario, imei, telefono, notas_telefono, timestamp FROM entregas WHERE LOWER(tipo) IN ("entrega", "entregas") AND 1=1'
         params = []
         if imei_search:
             query += ' AND imei LIKE ?'
@@ -776,10 +781,9 @@ def export_history():
 
     wb = Workbook()
     ws = wb.active
-    ws.append(['Tipo', 'Situm', 'Usuario', 'IMEI', 'Teléfono', 'Notas de Teléfono', 'Fecha (UTC)'])
+    ws.append(['Situm', 'Usuario', 'IMEI', 'Teléfono', 'Notas de Teléfono', 'Fecha (UTC)'])
     for r in rows:
         ws.append([
-            r['tipo'] if r['tipo'] else '',
             r['situm'] if r['situm'] else '',
             r['usuario'] if r['usuario'] else '',
             r['imei'] if r['imei'] else '',
@@ -791,19 +795,75 @@ def export_history():
     bio = io.BytesIO()
     wb.save(bio)
     bio.seek(0)
-    return send_file(bio, as_attachment=True, download_name='historico.xlsx', mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    return send_file(bio, as_attachment=True, download_name='historico_entregas.xlsx', mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+@app.route('/history_recepcion/export')
+@require_permission('ver_historico')
+def export_history_recepcion():
+    db = get_db()
+    imei_search = request.args.get('imei', '').strip()
+    usuario_search = request.args.get('usuario', '').strip()
+    ids_param = request.args.get('ids', '').strip()
+
+    # If specific ids provided, export only those
+    if ids_param:
+        id_list = [int(i) for i in ids_param.split(',') if i.strip().isdigit()]
+        if not id_list:
+            rows = []
+        else:
+            placeholders = ','.join(['?'] * len(id_list))
+            query = f'SELECT id, tipo, situm, usuario, imei, telefono, notas_telefono, timestamp FROM entregas WHERE LOWER(tipo) IN ("recepción", "recepcion", "recepciones") AND id IN ({placeholders}) ORDER BY timestamp DESC'
+            cur = db.execute(query, id_list)
+            rows = cur.fetchall()
+    else:
+        query = 'SELECT id, tipo, situm, usuario, imei, telefono, notas_telefono, timestamp FROM entregas WHERE LOWER(tipo) IN ("recepción", "recepcion", "recepciones") AND 1=1'
+        params = []
+        if imei_search:
+            query += ' AND imei LIKE ?'
+            params.append(f'%{imei_search}%')
+        if usuario_search:
+            query += ' AND usuario LIKE ?'
+            params.append(f'%{usuario_search}%')
+        query += ' ORDER BY timestamp DESC'
+
+        cur = db.execute(query, params)
+        rows = cur.fetchall()
+
+    wb = Workbook()
+    ws = wb.active
+    ws.append(['Situm', 'Usuario', 'IMEI', 'Teléfono', 'Notas de Teléfono', 'Fecha (UTC)'])
+    for r in rows:
+        ws.append([
+            r['situm'] if r['situm'] else '',
+            r['usuario'] if r['usuario'] else '',
+            r['imei'] if r['imei'] else '',
+            r['telefono'] if r['telefono'] else '',
+            r['notas_telefono'] if r['notas_telefono'] else '',
+            r['timestamp'] if r['timestamp'] else '',
+        ])
+
+    bio = io.BytesIO()
+    wb.save(bio)
+    bio.seek(0)
+    return send_file(bio, as_attachment=True, download_name='historico_recepciones.xlsx', mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
 
 
 @app.route('/history')
 @require_permission('ver_historico')
 def history():
+    # Redirigir a history_entrega por defecto
+    return redirect('/history_entrega')
+
+@app.route('/history_entrega')
+@require_permission('ver_historico')
+def history_entrega():
     db = get_db()
     imei_search = request.args.get('imei', '').strip()
     usuario_search = request.args.get('usuario', '').strip()
     fecha_inicio = request.args.get('fecha_inicio', '').strip()
     fecha_fin = request.args.get('fecha_fin', '').strip()
     
-    query = 'SELECT * FROM entregas WHERE 1=1'
+    query = 'SELECT * FROM entregas WHERE LOWER(tipo) IN ("entrega", "entregas") AND 1=1'
     params = []
     
     if imei_search:
@@ -826,7 +886,41 @@ def history():
     
     cur = db.execute(query, params)
     rows = cur.fetchall()
-    return render_template('history.html', rows=rows, imei_search=imei_search, usuario_search=usuario_search, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin)
+    return render_template('history_entrega.html', rows=rows, imei_search=imei_search, usuario_search=usuario_search, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin)
+
+@app.route('/history_recepcion')
+@require_permission('ver_historico')
+def history_recepcion():
+    db = get_db()
+    imei_search = request.args.get('imei', '').strip()
+    usuario_search = request.args.get('usuario', '').strip()
+    fecha_inicio = request.args.get('fecha_inicio', '').strip()
+    fecha_fin = request.args.get('fecha_fin', '').strip()
+    
+    query = 'SELECT * FROM entregas WHERE LOWER(tipo) IN ("recepción", "recepcion", "recepciones") AND 1=1'
+    params = []
+    
+    if imei_search:
+        query += ' AND imei LIKE ?'
+        params.append(f'%{imei_search}%')
+    
+    if usuario_search:
+        query += ' AND usuario LIKE ?'
+        params.append(f'%{usuario_search}%')
+    
+    if fecha_inicio:
+        query += ' AND timestamp >= ?'
+        params.append(f'{fecha_inicio}T00:00:00')
+    
+    if fecha_fin:
+        query += ' AND timestamp <= ?'
+        params.append(f'{fecha_fin}T23:59:59')
+    
+    query += ' ORDER BY timestamp DESC'
+    
+    cur = db.execute(query, params)
+    rows = cur.fetchall()
+    return render_template('history_recepcion.html', rows=rows, imei_search=imei_search, usuario_search=usuario_search, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin)
 
 
 def _get_value(row, keys):

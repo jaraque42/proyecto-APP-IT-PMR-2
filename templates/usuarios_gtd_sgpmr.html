@@ -10,7 +10,7 @@
       .btn-secondary { background: #667eea; color: white; padding: 10px 16px; border: none; border-radius: 6px; text-decoration: none; cursor: pointer; display: inline-block; }
       .btn-secondary:hover { background: #5568d3; }
       .btn-small { padding: 6px 12px; font-size: 12px; }
-      .table-container { overflow-x: auto; }
+      .table-container { overflow-x: auto; width: 100%; flex: 1; }
       table { width: 100%; border-collapse: collapse; margin-top: 20px; }
       thead { background: #667eea; color: white; }
       th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e7e7e7; }
@@ -23,7 +23,7 @@
   <body>
     <div class="bg-logo" aria-hidden="true"></div>
     <header class="topbar">
-      <h1><img src="/static/mitie_logo.png" srcset="/static/mitie_logo@2x.png 2x" class="brand-logo" alt="Mitie" width="56" decoding="async">Usuarios GTD SGPMR</h1>
+      <h1><a href="/" style="display:inline-flex;align-items:center;text-decoration:none;color:inherit;"><img src="/static/mitie_logo.png" srcset="/static/mitie_logo@2x.png 2x" class="brand-logo" alt="Mitie" width="56" decoding="async"></a>Usuarios GTD SGPMR</h1>
       <div style="display:flex;align-items:center;gap:12px">
         {% if current_user.is_authenticated %}
           <a class="user-badge" href="/perfil">Operador: {{ current_user.username }}</a>
@@ -36,7 +36,7 @@
       </div>
     </header>
 
-    <main class="container" style="flex-direction: column; height: auto; padding: 24px;">
+    <main class="container" style="flex-direction: column; flex: 1; padding: 24px;">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
           <script>window.server_messages = {{ messages | tojson }};</script>
@@ -48,12 +48,27 @@
       <div class="header-actions">
         <a href="/usuarios_gtd_sgpmr/crear" class="btn-secondary">+ Crear Usuario</a>
         <a href="/usuarios_gtd_sgpmr/importar" class="btn-secondary">📥 Importar</a>
+        <button id="export-usuarios-btn" class="btn-secondary">📤 Exportar</button>
+        <div style="flex: 1;"></div>
+        <input type="text" id="filter-usuario-sgpmr" placeholder="Filtrar por Usuario SGPMR..." style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
+        <div class="dropdown-menu">
+          <button class="dropdown-toggle" onclick="toggleDropdown(event)">Herramientas ▼</button>
+          <div class="dropdown-content">
+            <button id="select-all-usuarios" class="dropdown-item" type="button">Seleccionar todo</button>
+            <button id="deselect-all-usuarios" class="dropdown-item" type="button">Deseleccionar</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <button id="delete-selected-usuarios-btn" type="button" style="padding:6px 12px;background:#f0f0f0;border:1px solid #ccc;border-radius:4px;cursor:pointer;display:inline-block;box-shadow:0 2px 4px rgba(0,0,0,0.1);font-size:12px;color:#d32f2f;font-weight:bold">Borrar seleccionados</button>
       </div>
 
       <div class="table-container">
         <table>
           <thead>
             <tr>
+              <th><input type="checkbox" id="select-all-usuarios-checkbox"></th>
               <th>Usuario GTD</th>
               <th>Usuario SGPMR</th>
               <th>Nombre y Apellidos</th>
@@ -66,6 +81,7 @@
           <tbody>
             {% for usuario in usuarios %}
               <tr>
+                <td><input type="checkbox" class="row-select-usuarios" value="{{ usuario['id'] }}"></td>
                 <td>{{ usuario['usuario_gtd'] or '-' }}</td>
                 <td>{{ usuario['usuario_sgpmr'] or '-' }}</td>
                 <td>{{ usuario['nombre_apellidos'] }}</td>
@@ -83,7 +99,7 @@
               </tr>
             {% else %}
               <tr>
-                <td colspan="7" style="text-align: center; color: #999;">No hay usuarios registrados</td>
+                <td colspan="8" style="text-align: center; color: #999;">No hay usuarios registrados</td>
               </tr>
             {% endfor %}
           </tbody>

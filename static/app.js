@@ -194,8 +194,13 @@ document.addEventListener('DOMContentLoaded', function(){
       // Exportar solo los seleccionados
       const params = new URLSearchParams();
       params.set('ids', ids.join(','));
-       // Detectar si estamos en /incidents o /history
-       const exportUrl = window.location.pathname.includes('/incidents') ? '/incidents/export' : '/history/export';
+       // Detectar si estamos en /incidents, /history_entrega o /history_recepcion
+       let exportUrl = '/history_entrega/export';
+       if(window.location.pathname.includes('/incidents')){
+         exportUrl = '/incidents/export';
+       } else if(window.location.pathname.includes('/history_recepcion')){
+         exportUrl = '/history_recepcion/export';
+       }
        window.location.href = exportUrl + '?' + params.toString();
     });
   }
@@ -228,10 +233,12 @@ document.addEventListener('DOMContentLoaded', function(){
       const form = document.createElement('form');
       form.method = 'POST';
       const currentPath = window.location.pathname;
-      let deleteUrl = '/history/delete-selected';
+      let deleteUrl = '/history_entrega/delete-selected';
       let requiresPassword = true;
       if(currentPath.includes('/incidents')){
         deleteUrl = '/incidents/delete-selected';
+      } else if(currentPath.includes('/history_recepcion')){
+        deleteUrl = '/history_recepcion/delete-selected';
       } else if(currentPath.includes('/inventario_telefonos')){
         deleteUrl = '/inventario_telefonos/delete-selected';
         requiresPassword = false;
@@ -458,6 +465,238 @@ document.addEventListener('click', function(e){
   }
 });
 
+// Funcionalidad para la página Usuarios GTD SGPMR
+document.addEventListener('DOMContentLoaded', function(){
+  // Filtro por Usuario SGPMR
+  const filterInput = document.getElementById('filter-usuario-sgpmr');
+  if(filterInput){
+    filterInput.addEventListener('input', function(){
+      const filterValue = this.value.toLowerCase().trim();
+      const tableRows = document.querySelectorAll('table tbody tr');
+      
+      tableRows.forEach(row => {
+        // Skip the "no hay usuarios" row
+        if(row.querySelector('td[colspan]')) return;
+        
+        const usuarioSGPMRCell = row.querySelector('td:nth-child(3)'); // Usuario SGPMR es la tercera columna
+        if(usuarioSGPMRCell){
+          const usuarioSGPMRValue = usuarioSGPMRCell.textContent.toLowerCase().trim();
+          if(filterValue === '' || usuarioSGPMRValue.includes(filterValue)){
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        }
+      });
+    });
+  }
+
+  // Select all checkbox
+  const selectAllUsuarios = document.getElementById('select-all-usuarios-checkbox');
+  if(selectAllUsuarios){
+    selectAllUsuarios.addEventListener('change', function(){
+      const checked = this.checked;
+      document.querySelectorAll('.row-select-usuarios').forEach(checkbox => {
+        checkbox.checked = checked;
+      });
+    });
+  }
+
+  // Select all button
+  const selectAllBtn = document.getElementById('select-all-usuarios');
+  if(selectAllBtn){
+    selectAllBtn.addEventListener('click', function(){
+      document.querySelectorAll('.row-select-usuarios').forEach(checkbox => {
+        checkbox.checked = true;
+      });
+      if(selectAllUsuarios) selectAllUsuarios.checked = true;
+    });
+  }
+
+  // Deselect all button
+  const deselectAllBtn = document.getElementById('deselect-all-usuarios');
+  if(deselectAllBtn){
+    deselectAllBtn.addEventListener('click', function(){
+      document.querySelectorAll('.row-select-usuarios').forEach(checkbox => {
+        checkbox.checked = false;
+      });
+      if(selectAllUsuarios) selectAllUsuarios.checked = false;
+    });
+  }
+
+  // Delete selected usuarios
+  const deleteBtn = document.getElementById('delete-selected-usuarios-btn');
+  if(deleteBtn){
+    deleteBtn.addEventListener('click', function(){
+      const selected = document.querySelectorAll('.row-select-usuarios:checked');
+      if(selected.length === 0){
+        alert('Por favor selecciona al menos un usuario');
+        return;
+      }
+      
+      if(!confirm('¿Estás seguro de que quieres eliminar ' + selected.length + ' usuario(s)? Esta acción no se puede deshacer.')){
+        return;
+      }
+
+      const ids = Array.from(selected).map(cb => cb.value);
+      
+      // Eliminar uno a uno
+      let deleted = 0;
+      ids.forEach(id => {
+        fetch(`/usuarios_gtd_sgpmr/${id}/eliminar`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }).then(() => {
+          deleted++;
+          // Eliminar la fila de la tabla
+          document.querySelector(`input[value="${id}"].row-select-usuarios`).closest('tr').remove();
+          
+          if(deleted === ids.length){
+            alert('Usuarios eliminados correctamente');
+            location.reload();
+          }
+        });
+      });
+    });
+  }
+
+  // Exportar usuarios a CSV
+  const exportBtn = document.getElementById('export-usuarios-btn');
+  if(exportBtn){
+    exportBtn.addEventListener('click', function(){
+      const table = document.querySelector('table');
+      if(!table) return;
+      
+      // Obtener encabezados (excluyendo checkbox y acciones)
+      const headers = [];
+      table.querySelectorAll('thead th').forEach((th, idx) => {
+        if(idx === 0 || idx === table.querySelectorAll('thead th').length - 1) return; // Skip checkbox y acciones
+        headers.push(th.textContent.trim());
+      });
+      
+      // Obtener filas
+      const rows = [];
+      table.querySelectorAll('tbody tr').forEach(tr => {
+        // Skip "no hay usuarios" row
+        if(tr.querySelector('td[colspan]')) return;
+        
+        const rowData = [];
+        tr.querySelectorAll('td').forEach((td, idx) => {
+          // Skip checkbox (idx 0) y acciones (última columna)
+          if(idx === 0 || idx === tr.querySelectorAll('td').length - 1) return;
+          rowData.push(td.textContent.trim());
+        });
+        if(rowData.length > 0) rows.push(rowData);
+      });
+      
+      // Crear CSV
+      let csv = headers.join(',') + '\n';
+      rows.forEach(row => {
+        // Escapar comillas en los valores
+        const escapedRow = row.map(cell => {
+          if(cell.includes(',') || cell.includes('"') || cell.includes('\n')){
+            return '"' + cell.replace(/"/g, '""') + '"';
+          }
+          return cell;
+        }).join(',');
+        csv += escapedRow + '\n';
+      });
+      
+      // Descargar archivo
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'usuarios_gtd_sgpmr_' + new Date().toISOString().split('T')[0] + '.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  }
+});
+// Filtro por IMEI en la página de Inventario de Teléfonos
+document.addEventListener('DOMContentLoaded', function(){
+  const filterInput = document.getElementById('filter-imei');
+  if(filterInput){
+    filterInput.addEventListener('input', function(){
+      const filterValue = this.value.toLowerCase().trim();
+      const tableRows = document.querySelectorAll('table tbody tr');
+      
+      tableRows.forEach(row => {
+        // Skip the "no hay teléfonos" row
+        if(row.querySelector('td[colspan]')) return;
+        
+        const imeiCell = row.querySelector('td:nth-child(2)'); // IMEI es la segunda columna
+        if(imeiCell){
+          const imeiValue = imeiCell.textContent.toLowerCase().trim();
+          if(filterValue === '' || imeiValue.includes(filterValue)){
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        }
+      });
+    });
+  }
+
+  // Exportar tabla a CSV
+  const exportBtn = document.getElementById('export-btn');
+  if(exportBtn){
+    exportBtn.addEventListener('click', function(){
+      const table = document.querySelector('table');
+      if(!table) return;
+      
+      // Obtener encabezados (excluyendo checkbox y acciones)
+      const headers = [];
+      table.querySelectorAll('thead th').forEach((th, idx) => {
+        if(idx === 0 || idx === table.querySelectorAll('thead th').length - 1) return; // Skip checkbox y acciones
+        headers.push(th.textContent.trim());
+      });
+      
+      // Obtener filas visibles
+      const rows = [];
+      table.querySelectorAll('tbody tr').forEach(tr => {
+        // Skip "no hay teléfonos" row y filas ocultas por filtro
+        if(tr.querySelector('td[colspan]') || tr.style.display === 'none') return;
+        
+        const rowData = [];
+        tr.querySelectorAll('td').forEach((td, idx) => {
+          // Skip checkbox (idx 0) y acciones (última columna)
+          if(idx === 0 || idx === tr.querySelectorAll('td').length - 1) return;
+          rowData.push(td.textContent.trim());
+        });
+        if(rowData.length > 0) rows.push(rowData);
+      });
+      
+      // Crear CSV
+      let csv = headers.join(',') + '\n';
+      rows.forEach(row => {
+        // Escapar comillas en los valores
+        const escapedRow = row.map(cell => {
+          if(cell.includes(',') || cell.includes('"') || cell.includes('\n')){
+            return '"' + cell.replace(/"/g, '""') + '"';
+          }
+          return cell;
+        }).join(',');
+        csv += escapedRow + '\n';
+      });
+      
+      // Descargar archivo
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'inventario_telefonos_' + new Date().toISOString().split('T')[0] + '.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  }
+});
 
 // Dropdown menu toggle function
 function toggleDropdown(e){

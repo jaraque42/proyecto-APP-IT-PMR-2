@@ -3,19 +3,21 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Histórico - Entregas y Recepciones</title>
+    <title>Histórico - Recepciones de Móviles</title>
     <link rel="stylesheet" href="/static/style.css">
   </head>
   <body>
     <div class="bg-logo" aria-hidden="true"></div>
     <header class="topbar">
-      <h1><a href="/" style="display:inline-flex;align-items:center;text-decoration:none;color:inherit;"><img src="/static/mitie_logo.png" srcset="/static/mitie_logo@2x.png 2x" class="brand-logo" alt="Mitie" width="56" decoding="async"></a>Histórico</h1>
+      <h1><a href="/" style="display:inline-flex;align-items:center;text-decoration:none;color:inherit;"><img src="/static/mitie_logo.png" srcset="/static/mitie_logo@2x.png 2x" class="brand-logo" alt="Mitie" width="56" decoding="async"></a>Histórico de Recepciones</h1>
         <div style="display:flex;align-items:center;gap:12px">
           {% if current_user.is_authenticated %}
             <a class="user-badge" href="/perfil">Operador: {{ current_user.username }}</a>
           {% endif %}
           <div>
         <a class="history-link" href="/">Volver</a>
+        &nbsp;|&nbsp;
+        <a class="history-link" href="/history_entrega">Histórico Entregas</a>
         {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
           &nbsp;|&nbsp;
           <a class="history-link" href="/administracion">Administración</a>
@@ -35,7 +37,7 @@
 
       <div class="search-box">
         <h3>Búsqueda</h3>
-        <form method="get" action="/history" style="display:inline-block;">
+        <form method="get" action="/history_recepcion" style="display:inline-block;">
           <label>IMEI: <input type="text" name="imei" value="{{ imei_search }}"></label>
           <label>Usuario: <input type="text" name="usuario" value="{{ usuario_search }}"></label>
           <label>Desde: <input type="date" name="fecha_inicio" value="{{ fecha_inicio }}"></label>
@@ -44,12 +46,10 @@
         <div class="dropdown-menu">
           <button class="dropdown-toggle" onclick="toggleDropdown(event)">Herramientas ▼</button>
           <div class="dropdown-content">
-            <button class="dropdown-item" type="button" onclick="document.querySelector('form[action=\"/history\"]').submit(); toggleDropdown(event);">Buscar</button>
-            <a href="/history" class="dropdown-item">Limpiar</a>
+            <button class="dropdown-item" type="button" onclick="document.querySelector('form[action=\"/history_recepcion\"]').submit(); toggleDropdown(event);">Buscar</button>
+            <a href="/history_recepcion" class="dropdown-item">Limpiar</a>
             <button id="select-all-rows" class="dropdown-item" type="button">Seleccionar todo</button>
             <button id="deselect-all-rows" class="dropdown-item" type="button">Deseleccionar</button>
-            <button id="export-all-btn" class="dropdown-item" type="button" onclick="const imei = new URLSearchParams(window.location.search).get('imei'); const usuario = new URLSearchParams(window.location.search).get('usuario'); const params = new URLSearchParams(); if(imei) params.set('imei', imei); if(usuario) params.set('usuario', usuario); window.location.href = '/history/export?' + params.toString();">Exportar todo</button>
-            <button id="export-selected-btn" class="dropdown-item" type="button">Exp selec</button>
           </div>
         </div>
       </div>
@@ -60,7 +60,6 @@
         <thead>
           <tr>
             <th><input type="checkbox" id="select-all"></th>
-            <th>Tipo</th>
             <th>Situm</th>
             <th>Usuario</th>
             <th>IMEI</th>
@@ -76,7 +75,6 @@
           {% for r in rows %}
           <tr>
             <td><input type="checkbox" class="row-select" value="{{ r['id'] }}"></td>
-            <td>{{ r['tipo'] }}</td>
             <td>{{ r['situm'] }}</td>
             <td>{{ r['usuario'] }}</td>
             <td>{{ r['imei'] }}</td>
