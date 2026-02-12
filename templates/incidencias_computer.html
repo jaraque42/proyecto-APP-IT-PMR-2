@@ -31,8 +31,8 @@
       <!-- Contenedor de toasts (flotante) -->
       <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
-      <section class="card incidencia">
-        <h2>Incidencia de Computer</h2>
+      <section class="card incidencia" style="background:var(--brand-gradient);padding:10px;text-align:center;">
+        <h2 style="color:#ffffff;margin-top:0;">Incidencia de Computer</h2>
         <form action="/incidencias_computer" method="post" class="form" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
           <label>Hostname<input name="hostname" required placeholder="Nombre del equipo" title="Hostname del computer"></label>
           <label>Número de Serie<input name="numero_serie" placeholder="Número de serie del equipo"></label>
