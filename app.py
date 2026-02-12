@@ -69,6 +69,22 @@ def init_db():
             )
         ''')
     
+    # Create computers table if not exists
+    cursor.execute("PRAGMA table_info(computers)")
+    if not cursor.fetchall():
+        conn.execute('''
+            CREATE TABLE computers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                hostname TEXT,
+                numero_serie TEXT,
+                apellidos_nombre TEXT,
+                notas TEXT,
+                tipo TEXT,
+                usuario TEXT,
+                timestamp TEXT
+            )
+        ''')
+    
     # Create incidencias table if not exists
     cursor.execute("PRAGMA table_info(incidencias)")
     if not cursor.fetchall():
@@ -411,6 +427,90 @@ def incidencias_moviles():
     if not current_user.is_authenticated:
         return redirect(url_for('login'))
     return render_template('incidencias_moviles.html')
+
+@app.route('/entrega_computer', methods=['GET', 'POST'])
+def entrega_computer():
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        hostname = request.form.get('hostname', '').strip()
+        numero_serie = request.form.get('numero_serie', '').strip()
+        apellidos_nombre = request.form.get('apellidos_nombre', '').strip()
+        notas = request.form.get('notas', '').strip()
+        usuario = current_user.username
+        timestamp = datetime.now().isoformat()
+        
+        if not hostname:
+            flash('Hostname es requerido', 'error')
+            return render_template('entrega_computer.html')
+        
+        db = get_db()
+        db.execute(
+            'INSERT INTO computers (hostname, numero_serie, apellidos_nombre, notas, tipo, usuario, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            (hostname, numero_serie, apellidos_nombre, notas, 'Entrega', usuario, timestamp)
+        )
+        db.commit()
+        flash('Computer entregado correctamente', 'success')
+        return redirect(url_for('index'))
+    
+    return render_template('entrega_computer.html')
+
+@app.route('/recepcion_computer', methods=['GET', 'POST'])
+def recepcion_computer():
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        hostname = request.form.get('hostname', '').strip()
+        numero_serie = request.form.get('numero_serie', '').strip()
+        apellidos_nombre = request.form.get('apellidos_nombre', '').strip()
+        notas = request.form.get('notas', '').strip()
+        usuario = current_user.username
+        timestamp = datetime.now().isoformat()
+        
+        if not hostname:
+            flash('Hostname es requerido', 'error')
+            return render_template('recepcion_computer.html')
+        
+        db = get_db()
+        db.execute(
+            'INSERT INTO computers (hostname, numero_serie, apellidos_nombre, notas, tipo, usuario, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            (hostname, numero_serie, apellidos_nombre, notas, 'Recepción', usuario, timestamp)
+        )
+        db.commit()
+        flash('Computer recibido correctamente', 'success')
+        return redirect(url_for('index'))
+    
+    return render_template('recepcion_computer.html')
+
+@app.route('/incidencias_computer', methods=['GET', 'POST'])
+def incidencias_computer():
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        hostname = request.form.get('hostname', '').strip()
+        numero_serie = request.form.get('numero_serie', '').strip()
+        apellidos_nombre = request.form.get('apellidos_nombre', '').strip()
+        notas = request.form.get('notas', '').strip()
+        usuario = current_user.username
+        timestamp = datetime.now().isoformat()
+        
+        if not hostname:
+            flash('Hostname es requerido', 'error')
+            return render_template('incidencias_computer.html')
+        
+        db = get_db()
+        db.execute(
+            'INSERT INTO computers (hostname, numero_serie, apellidos_nombre, notas, tipo, usuario, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            (hostname, numero_serie, apellidos_nombre, notas, 'Incidencia', usuario, timestamp)
+        )
+        db.commit()
+        flash('Incidencia registrada correctamente', 'success')
+        return redirect(url_for('index'))
+    
+    return render_template('incidencias_computer.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
