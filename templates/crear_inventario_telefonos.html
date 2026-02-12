@@ -6,7 +6,10 @@
     <title>Crear Teléfono - Inventario</title>
     <link rel="stylesheet" href="/static/style.css">
     <style>
-      .form-container { max-width: 500px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin: 20px auto; }
+      .form-container { width: 50%; max-width: none; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin: 20px auto; }
+      @media (max-width: 900px) {
+        .form-container { width: 100%; }
+      }
       .form-container h2 { margin-bottom: 30px; color: #333; }
       .form-group { margin-bottom: 20px; }
       .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: #555; }

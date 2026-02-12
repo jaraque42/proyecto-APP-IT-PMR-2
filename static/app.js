@@ -219,22 +219,24 @@ document.addEventListener('DOMContentLoaded', function(){
         return;
       }
       
-      // Pedir confirmación y contraseña
+      // Pedir confirmación (y contraseña si aplica)
       if(!confirm('¿Está seguro de que desea borrar los registros seleccionados? Esta acción no se puede deshacer.')){
-        return;
-      }
-      
-      const password = prompt('Introduce la contraseña para borrar:');
-      if(!password){
         return;
       }
       
       // Crear y enviar formulario POST
       const form = document.createElement('form');
       form.method = 'POST';
-       // Detectar si estamos en /incidents o /history
-       const deleteUrl = window.location.pathname.includes('/incidents') ? '/incidents/delete-selected' : '/history/delete-selected';
-       form.action = deleteUrl;
+      const currentPath = window.location.pathname;
+      let deleteUrl = '/history/delete-selected';
+      let requiresPassword = true;
+      if(currentPath.includes('/incidents')){
+        deleteUrl = '/incidents/delete-selected';
+      } else if(currentPath.includes('/inventario_telefonos')){
+        deleteUrl = '/inventario_telefonos/delete-selected';
+        requiresPassword = false;
+      }
+      form.action = deleteUrl;
       
       const idsInput = document.createElement('input');
       idsInput.type = 'hidden';
@@ -242,11 +244,17 @@ document.addEventListener('DOMContentLoaded', function(){
       idsInput.value = ids.join(',');
       form.appendChild(idsInput);
       
-      const passInput = document.createElement('input');
-      passInput.type = 'hidden';
-      passInput.name = 'password';
-      passInput.value = password;
-      form.appendChild(passInput);
+      if(requiresPassword){
+        const password = prompt('Introduce la contraseña para borrar:');
+        if(!password){
+          return;
+        }
+        const passInput = document.createElement('input');
+        passInput.type = 'hidden';
+        passInput.name = 'password';
+        passInput.value = password;
+        form.appendChild(passInput);
+      }
       
       document.body.appendChild(form);
       form.submit();

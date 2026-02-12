@@ -10,7 +10,7 @@
       .btn-secondary { background: #667eea; color: white; padding: 10px 16px; border: none; border-radius: 6px; text-decoration: none; cursor: pointer; display: inline-block; }
       .btn-secondary:hover { background: #5568d3; }
       .btn-small { padding: 6px 12px; font-size: 12px; }
-      .table-container { overflow-x: auto; }
+      .table-container { overflow-x: auto; width: 100%; flex: 1; }
       table { width: 100%; border-collapse: collapse; margin-top: 20px; }
       thead { background: #667eea; color: white; }
       th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e7e7e7; }
@@ -30,6 +30,10 @@
         {% endif %}
         <div>
           <a class="history-link" href="/">Volver</a>
+          {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
+            &nbsp;|&nbsp;
+            <a class="history-link" href="/administracion">Administración</a>
+          {% endif %}
           &nbsp;|&nbsp;
           <a class="history-link" href="/logout">Cerrar Sesión</a>
         </div>
@@ -48,12 +52,24 @@
       <div class="header-actions">
         <a href="/inventario_telefonos/crear" class="btn-secondary">+ Crear Teléfono</a>
         <a href="/inventario_telefonos/importar" class="btn-secondary">📥 Importar</a>
+        <div class="dropdown-menu">
+          <button class="dropdown-toggle" onclick="toggleDropdown(event)">Herramientas ▼</button>
+          <div class="dropdown-content">
+            <button id="select-all-rows" class="dropdown-item" type="button">Seleccionar todo</button>
+            <button id="deselect-all-rows" class="dropdown-item" type="button">Deseleccionar</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <button id="delete-selected-btn" type="button" style="padding:6px 12px;background:#f0f0f0;border:1px solid #ccc;border-radius:4px;cursor:pointer;display:inline-block;box-shadow:0 2px 4px rgba(0,0,0,0.1);font-size:12px;color:#d32f2f;font-weight:bold">Borrar seleccionados</button>
       </div>
 
       <div class="table-container">
         <table>
           <thead>
             <tr>
+              <th><input type="checkbox" id="select-all"></th>
               <th>IMEI</th>
               <th>Número Serie</th>
               <th>Modelo</th>
@@ -65,6 +81,7 @@
           <tbody>
             {% for telefono in telefonos %}
               <tr>
+                <td><input type="checkbox" class="row-select" value="{{ telefono['id'] }}"></td>
                 <td>{{ telefono['imei'] }}</td>
                 <td>{{ telefono['numero_serie'] or '-' }}</td>
                 <td>{{ telefono['modelo'] or '-' }}</td>
@@ -81,7 +98,7 @@
               </tr>
             {% else %}
               <tr>
-                <td colspan="6" style="text-align: center; color: #999;">No hay teléfonos registrados</td>
+                <td colspan="7" style="text-align: center; color: #999;">No hay teléfonos registrados</td>
               </tr>
             {% endfor %}
           </tbody>

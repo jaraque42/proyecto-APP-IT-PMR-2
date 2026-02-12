@@ -1401,6 +1401,22 @@ def eliminar_inventario_telefonos(telefono_id):
     flash('Teléfono eliminado correctamente', 'success')
     return redirect(url_for('inventario_telefonos'))
 
+@app.route('/inventario_telefonos/delete-selected', methods=['POST'])
+@require_permission('registrar')
+def delete_selected_inventario_telefonos():
+    ids_param = request.form.get('ids', '').strip()
+
+    if ids_param:
+        id_list = [int(i) for i in ids_param.split(',') if i.strip().isdigit()]
+        if id_list:
+            db = get_db()
+            placeholders = ','.join(['?'] * len(id_list))
+            db.execute(f'DELETE FROM inventario_telefonos WHERE id IN ({placeholders})', id_list)
+            db.commit()
+            flash('Teléfonos eliminados correctamente', 'success')
+
+    return redirect(url_for('inventario_telefonos'))
+
 @app.route('/inventario_telefonos/importar', methods=['GET', 'POST'])
 @require_permission('registrar')
 def importar_inventario_telefonos():
