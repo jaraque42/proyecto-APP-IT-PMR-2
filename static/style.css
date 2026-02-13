@@ -16,7 +16,7 @@ body{margin:0;background:var(--muted);color:var(--text)}
 @media (max-width:600px){.brand-logo{width:40px}}
 .history-link{color:rgba(255,255,255,0.95);text-decoration:none;font-weight:600}  
 .container{display:flex;flex-direction:column;align-content:space-between;justify-content:center;align-items:flex-start;gap:20px;padding:24px;width:100%;margin:0;max-width:none;height:calc(100vh - 72px);box-sizing:border-box}
-.card{background:#fff;padding:18px;border-radius:8px;flex:1;box-shadow:0 1px 6px rgba(0,0,0,0.06);display:flex;flex-direction:column;overflow:auto;border:2px solid var(--brand-magenta)}
+.card{background:#fff;padding:18px;border-radius:8px;flex:1;box-shadow:0 1px 6px rgba(0,0,0,0.06);display:flex;flex-direction:column;overflow:auto;}
 .card h2{margin-top:0;color:#333}
 .card.entrega{}
 .card.entrega h2{color:#2e7d32}
@@ -46,6 +46,13 @@ body{margin:0;background:var(--muted);color:var(--text)}
 .actions{margin-top:14px}
 .btn{padding:10px 14px;border-radius:8px;border:none;cursor:pointer;font-weight:600}
 .btn.primary{background:var(--accent);color:#111} 
+.btn-secondary { background: #667eea; color: white; padding: 10px 16px; border: none; border-radius: 6px; text-decoration: none; cursor: pointer; display: inline-block; font-size: 14px; font-weight: 600; transition: background 0.3s; }
+.btn-secondary:hover { background: #5568d3; color: white; }
+.btn-small { padding: 6px 12px !important; font-size: 12px !important; }
+.btn-danger { background: #d32f2f !important; color: white !important; }
+.btn-danger:hover { background: #b71c1c !important; }
+.btn-cancel { background: #6c757d; color: white; padding: 10px 16px; border: none; border-radius: 6px; text-decoration: none; cursor: pointer; display: inline-block; font-size: 14px; font-weight: 600; transition: background 0.3s; }
+.btn-cancel:hover { background: #5a6268; color: white; }
 .btn.secondary{background:#fff;border:1px solid #ddd}
 table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden}
 th,td{padding:10px;text-align:left;border-bottom:1px solid #f1f1f1}

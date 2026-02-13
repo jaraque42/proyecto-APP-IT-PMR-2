@@ -12,17 +12,30 @@
       <div style="display:flex;align-items:center;gap:12px">
         {% if current_user.is_authenticated %}
           <a class="user-badge" href="/perfil">Operador: {{ current_user.username }}</a>
-        {% endif %}
-        <div class="nav-actions">
+        {% endif %}        
+        <div class="nav-actions" style="display:flex; gap:10px;">
         <div class="dropdown">
-          <button id="menu-toggle" class="btn secondary" aria-expanded="false" aria-controls="menu-list" type="button">Opciones ▾</button>
-          <div id="menu-list" class="dropdown-content" role="menu">
+          <button class="btn secondary menu-trigger" aria-expanded="false" type="button">Moviles ▾</button>
+          <div class="dropdown-content" role="menu">
+            <a role="menuitem" href="/history_entrega">Historico Entregas Moviles</a>
+            <a role="menuitem" href="/history_recepcion">Historico Recepcion Moviles</a>
+            <a role="menuitem" href="/incidents">Historico Incidencias Moviles</a>
+          </div>
+        </div>
+        <div class="dropdown">
+          <button class="btn secondary menu-trigger" aria-expanded="false" type="button">Computer ▾</button>
+          <div class="dropdown-content" role="menu">
+            <a role="menuitem" href="/history_computers_entrega">Historico Entregas Computer</a>
+            <a role="menuitem" href="/history_computers_recepcion">Historico Recepcion Computer</a>
+            <a role="menuitem" href="/history_computers_incidencias">Historico Incidencias Computer</a>
+          </div>
+        </div>
+        <div class="dropdown">
+          <button class="btn secondary menu-trigger" aria-expanded="false" type="button">Opciones ▾</button>
+          <div class="dropdown-content" role="menu">
             <a role="menuitem" href="https://mitie.hexnodemdm.com/login/?next=/#/" target="_blank">Hexnode</a>
             <a role="menuitem" href="https://dashboard.situm.com/" target="_blank">Situm</a>
             <a role="menuitem" href="https://pmr-aena.gtd.systems/pmr" target="_blank">GTD</a>
-            <a role="menuitem" href="/history_entrega">Histórico Entregas</a>
-            <a role="menuitem" href="/history_recepcion">Histórico Recepciones</a>
-            <a role="menuitem" href="/incidents">Incidencias</a>
             <a role="menuitem" href="/import">Importar</a>
             {% if current_user.is_authenticated %}
               <a role="menuitem" href="/usuarios_gtd_sgpmr">Usuarios GTD SGPMR</a>
@@ -37,7 +50,7 @@
       </div>
     </header>
 
-    <main class="container" style="flex-direction:row;">
+    <main class="container" style="display:flex; flex-wrap:wrap; gap:30px; justify-content:center; width:90%; max-width:1400px; margin: 0 auto; padding-top: 30px;">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
           <script>window.server_messages = {{ messages | tojson }};</script>
@@ -47,25 +60,32 @@
       <!-- Contenedor de toasts (flotante) -->
       <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
-      <section class="card" style="background:var(--brand-gradient);padding:18px;border-radius:8px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,0.04);width:200px;color:#ffffff;text-align:center;">
-        <h2 style="margin-top:0;color:#ffffff;margin-bottom:12px;">Móviles</h2>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-
-          <a href="/entrega_moviles" style="display:inline-block;padding:8px 14px;background:#4caf50;color:white;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,0.1);text-align:center;width:130px;">Entrega moviles</a>
-          <a href="/recepcion_moviles" style="display:inline-block;padding:8px 14px;background:#2196f3;color:white;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,0.1);text-align:center;width:130px;">Recepcion moviles</a>
-          <a href="/incidencias_moviles" style="display:inline-block;padding:8px 14px;background:#d32f2f;color:white;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,0.1);text-align:center;width:130px;">Incidencias moviles</a>
+      <section class="card" style="background:#ffffffee;padding:18px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.04);width:450px;color:#ffffff;text-align:left;">
+        <h2 style="margin-top:0;color:#797a7a;margin-bottom:12px;">Móviles</h2>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <a href="/entrega_moviles" style="display:inline-block;padding:8px 14px;background:#52535293;color:rgb(55, 54, 54);text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,0.1);text-align:center;width:130px;">Entrega moviles</a>
+          <a href="/recepcion_moviles" style="display:inline-block;padding:8px 14px;background:#52535293;color:rgb(55, 54, 54);text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,0.1);text-align:center;width:130px;">Recepcion moviles</a>
+          <a href="/incidencias_moviles" style="display:inline-block;padding:8px 14px;background:#52535293;color:rgb(55, 54, 54);text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,0.1);text-align:center;width:130px;">Incidencias moviles</a>
         </div>
       </section>
 
-      <section class="card" style="background:var(--brand-gradient);padding:18px;border-radius:8px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,0.04);width:200px;color:#ffffff;text-align:center;">
-        <h2 style="margin-top:0;color:#ffffff;margin-bottom:12px;">Computer Mitie</h2>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-
-          <a href="/entrega_computer" style="display:inline-block;padding:8px 14px;background:#4caf50;color:white;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,0.1);text-align:center;width:130px;">Entrega Computer</a>
-          <a href="/recepcion_computer" style="display:inline-block;padding:8px 14px;background:#2196f3;color:white;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,0.1);text-align:center;width:130px;">Recepcion Computer</a>
-          <a href="/incidencias_computer" style="display:inline-block;padding:8px 14px;background:#d32f2f;color:white;text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,0.1);text-align:center;width:130px;">Incidencias Computer</a>
+      <section class="card" style="background:#ffffffee;padding:18px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.04);width:450px;color:#ffffff;text-align:left;">
+        <h2 style="margin-top:0;color:#797a7a;margin-bottom:12px;">Computer Mitie</h2>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <a href="/entrega_computer" style="display:inline-block;padding:8px 14px;background:#52535293;color:rgb(55, 54, 54);text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,0.1);text-align:center;width:130px;">Entrega Computer</a>
+          <a href="/recepcion_computer" style="display:inline-block;padding:8px 14px;background:#52535293;color:rgb(55, 54, 54);text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,0.1);text-align:center;width:130px;">Recepcion Computer</a>
+          <a href="/incidencias_computer" style="display:inline-block;padding:8px 14px;background:#52535293;color:rgb(55, 54, 54);text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,0.1);text-align:center;width:130px;">Incidencias Computer</a>
         </div>
       </section>
+
+      <section class="card" style="background:#ffffffee;padding:18px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.04);width:450px;color:#ffffff;text-align:left;">
+        <h2 style="margin-top:0;color:#797a7a;margin-bottom:12px;">Computer AENA</h2>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <a href="/Entrada_computer_aena" style="display:inline-block;padding:8px 14px;background:#52535293;color:rgb(55, 54, 54);text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,0.1);text-align:center;width:130px;">Entrega Computer</a>          
+          <a href="/incidencias_computer_aena" style="display:inline-block;padding:8px 14px;background:#52535293;color:rgb(55, 54, 54);text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,0.1);text-align:center;width:130px;">Incidencias Computer</a>
+        </div>
+      </section>     
+      
     </main>
 
     <script src="/static/app.js"></script>

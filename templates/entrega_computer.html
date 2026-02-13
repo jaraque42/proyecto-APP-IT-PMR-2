@@ -33,12 +33,12 @@
 
       <section class="card entrega">
         <h2>Entrega de Computer</h2>
-        <form action="/entrega_computer" method="post" class="form" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <form action="/entrega_computer" method="post" class="form" style="grid-template-columns:1fr 1fr;gap:16px;">
           <label>Hostname<input name="hostname" required placeholder="Nombre del equipo" title="Hostname del computer"></label>
           <label>Número de Serie<input name="numero_serie" placeholder="Número de serie del equipo"></label>
           <label>Apellidos y Nombre<input name="apellidos_nombre" required placeholder="Apellido1, Apellido2, Nombre" title="Formato: Apellido1, Apellido2, Nombre"></label>
-          <label>Notas<textarea name="notas" rows="4" placeholder="Notas adicionales sobre el equipo"></textarea></label>
-          <div class="actions" style="grid-column:1/-1;"><button type="submit" class="btn entrega">Registrar Entrega</button></div>
+          <label>Notas<input name= "Notas_adicionales" placeholder="Notas adicionales sobre el equipo"></label>
+          <div class="actions" style="grid-column:1/-1;"><button type="submit" class="btn-secondary">Registrar Entrega</button></div>
         </form>
       </section>
     </main>

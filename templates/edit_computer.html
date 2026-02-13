@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Editar Registro Computer</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+      .form-container { max-width: 600px; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin: 20px auto; }
+      .form-container h2 { margin-bottom: 25px; color: #333; }
+      .form label { display: block; margin-bottom: 15px; font-weight: 500; color: #555; }
+      .form input, .form select, .form textarea { width: 100%; padding: 10px; border: 1px solid #e7e7e7; border-radius: 6px; font-size: 14px; margin-top: 5px; }
+      .form textarea { height: 100px; font-family: inherit; }
+      .form-actions { display: flex; gap: 10px; margin-top: 30px; }
+      .btn { flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; }
+      .btn-cancel { background: #e7e7e7; color: #333; }
+      .btn-cancel:hover { background: #d7d7d7; }
+    </style>
+  </head>
+  <body>
+    <div class="bg-logo" aria-hidden="true"></div>
+    <header class="topbar">
+      <h1><a href="/" style="display:inline-flex;align-items:center;text-decoration:none;color:inherit;"><img src="/static/mitie_logo.png" srcset="/static/mitie_logo@2x.png 2x" class="brand-logo" alt="Mitie" width="56" decoding="async"></a>Editar Registro Computer</h1>
+      <div style="display:flex;align-items:center;gap:12px">
+        {% if current_user.is_authenticated %}
+          <a class="user-badge" href="/perfil">Operador: {{ current_user.username }}</a>
+        {% endif %}
+        <div><a class="history-link" href="#" onclick="window.history.back(); return false;">Volver</a></div>
+      </div>
+    </header>
+    <main class="container" style="flex-direction: column; height: auto;">
+      <div class="form-container">
+        <h2>Editar registro #{{ r['id'] }}</h2>
+        <form method="post" action="" class="form">
+          <label>Proyecto
+            <select name="proyecto">
+              <option value="Mitie" {% if r['proyecto'] == 'Mitie' %}selected{% endif %}>Mitie</option>
+              <option value="AENA" {% if r['proyecto'] == 'AENA' %}selected{% endif %}>AENA</option>
+            </select>
+          </label>
+          <label>Hostname<input name="hostname" value="{{ r['hostname'] or '' }}" required></label>
+          <label>Número de Serie<input name="numero_serie" value="{{ r['numero_serie'] or '' }}"></label>
+          <label>Persona (Apellidos y Nombre)<input name="apellidos_nombre" value="{{ r['apellidos_nombre'] or '' }}" required></label>
+          <label>Notas<textarea name="notas">{{ r['notas'] or '' }}</textarea></label>
+          <label>Tipo (Entrega / Recepción / Incidencia)
+            <select name="tipo">
+              <option value="Entrega" {% if r['tipo'] == 'Entrega' %}selected{% endif %}>Entrega</option>
+              <option value="Recepción" {% if r['tipo'] == 'Recepción' %}selected{% endif %}>Recepción</option>
+              <option value="Incidencia" {% if r['tipo'] == 'Incidencia' %}selected{% endif %}>Incidencia</option>
+            </select>
+          </label>
+          
+          <div class="form-actions">
+            <button type="submit" class="btn btn-secondary">Guardar cambios</button>
+            <a href="#" onclick="window.history.back(); return false;" class="btn btn-cancel">Cancelar</a>
+          </div>
+        </form>
+      </div>
+    </main>
+  </body>
+</html>

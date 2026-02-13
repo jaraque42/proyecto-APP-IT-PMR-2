@@ -170,7 +170,7 @@
 
       <div class="admin-header">
         <h2>Usuarios</h2>
-        <a href="/usuarios/crear" id="open-create-btn" class="btn-crear">+ Crear Usuario</a>
+        <a href="/usuarios/crear" id="open-create-btn" class="btn-secondary">+ Crear Usuario</a>
       </div>
 
       <!-- Modal para crear usuario inline -->
@@ -200,8 +200,8 @@
               </select>
             </div>
             <div style="display:flex; gap:10px; margin-top:14px;">
-              <button type="submit" class="btn btn-primary" style="flex:1;">Crear</button>
-              <button type="button" id="cancel-create" class="btn btn-secondary" style="flex:1;">Cancelar</button>
+              <button type="submit" class="btn-secondary" style="flex:1;">Crear</button>
+              <button type="button" id="cancel-create" class="btn-secondary" style="flex:1; background:#ccc;">Cancelar</button>
             </div>
           </form>
         </div>
@@ -231,10 +231,10 @@
                 <td>{{ usuario[4][:10] if usuario[4] else 'N/A' }}</td>
                 <td>
                   <div class="acciones">
-                    <a href="/usuarios/{{ usuario[0] }}/editar" class="btn-pequeno btn-editar">Editar</a>
-                    <a href="/usuarios/{{ usuario[0] }}/cambiar_contrasena" class="btn-pequeno" style="background:#6f42c1;color:#fff;border-radius:4px;padding:6px 10px;text-decoration:none;">Cambiar clave</a>
+                    <a href="/usuarios/{{ usuario[0] }}/editar" class="btn-secondary btn-small">Editar</a>
+                    <a href="/usuarios/{{ usuario[0] }}/cambiar_contrasena" class="btn-secondary btn-small" style="background:#6f42c1;">Clave</a>
                     <form method="post" action="/usuarios/{{ usuario[0] }}/eliminar" class="form-eliminar" onclick="return confirm('¿Estás seguro de que quieres eliminar este usuario?');">
-                      <button type="submit" class="btn-pequeno btn-eliminar">Eliminar</button>
+                      <button type="submit" class="btn-secondary btn-small btn-danger">Eliminar</button>
                     </form>
                   </div>
                 </td>

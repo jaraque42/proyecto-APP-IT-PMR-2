@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+      .search-box { background: #ffffffee; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+      .search-actions { display: flex; gap: 10px; margin-top: 15px; }
+    </style>
+  </head>
+  <body>
+    <div class="bg-logo" aria-hidden="true"></div>
+    <header class="topbar">
+      <h1><a href="/" style="display:inline-flex;align-items:center;text-decoration:none;color:inherit;"><img src="/static/mitie_logo.png" srcset="/static/mitie_logo@2x.png 2x" class="brand-logo" alt="Mitie" width="56" decoding="async"></a>{{ title }}</h1>
+        <div style="display:flex;align-items:center;gap:12px">
+          {% if current_user.is_authenticated %}
+            <a class="user-badge" href="/perfil">Operador: {{ current_user.username }}</a>
+          {% endif %}
+          <div>
+        <a class="history-link" href="/">Volver</a>
+        {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
+          &nbsp;|&nbsp;
+          <a class="history-link" href="/administracion">Administración</a>
+        {% endif %}
+        &nbsp;|&nbsp;
+        <a class="history-link" href="/logout">Cerrar Sesión</a>
+      </div>
+    </header>
+    <main class="container history">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <script>window.server_messages = {{ messages | tojson }};</script>
+        {% endif %}
+      {% endwith %}
+
+      <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+      <div class="search-box">
+        <h3>Búsqueda y Herramientas</h3>
+        <form method="get" style="display:inline-block;">
+          <label>Hostname: <input type="text" name="hostname" value="{{ hostname_search }}"></label>
+          <label>S/N: <input type="text" name="sn" value="{{ sn_search }}"></label>
+          <label>Proyecto: 
+            <select name="proyecto">
+                <option value="">Todos</option>
+                <option value="Mitie" {% if proyecto_filter == 'Mitie' %}selected{% endif %}>Mitie</option>
+                <option value="AENA" {% if proyecto_filter == 'AENA' %}selected{% endif %}>AENA</option>
+            </select>
+          </label>
+          <button type="submit" class="btn-secondary btn-small">Buscar</button>
+        </form>
+        <div class="search-actions">
+          <a href="/history_computers/export?tipo={{ tipo_actual }}&hostname={{ hostname_search }}&sn={{ sn_search }}&proyecto={{ proyecto_filter }}" class="btn-secondary">📤 Exportar Excel</a>
+          <a href="/history_computers/import" class="btn-secondary">📥 Importar desde Excel</a>
+          <div class="dropdown-menu">
+            <button class="dropdown-toggle" onclick="toggleDropdown(event)">Herramientas ▼</button>
+            <div class="dropdown-content">
+              <button class="dropdown-item" type="button" onclick="this.closest('.search-box').querySelector('form').submit();">Buscar</button>
+              <a href="{{ request.path }}" class="dropdown-item">Limpiar</a>
+              <button id="select-all-rows" class="dropdown-item" type="button">Seleccionar todo</button>
+              <button id="deselect-all-rows" class="dropdown-item" type="button">Deseleccionar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px; margin-bottom: 12px;">
+        <button id="delete-selected-btn" type="button" class="btn-secondary btn-danger">Borrar seleccionados</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="select-all"></th>
+            <th>Proyecto</th>
+            <th>Hostname</th>
+            <th>S/N</th>
+            <th>Persona (Usuario)</th>
+            <th>Notas</th>
+            <th>Registrado por</th>
+            <th>Fecha</th>
+            {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
+            <th>Acciones</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+          <tr>
+            <td><input type="checkbox" class="row-select" value="{{ r['id'] }}"></td>
+            <td style="font-weight:bold; color: {{ '#003666' if r['proyecto'] == 'AENA' else '#e30613' }}">{{ r['proyecto'] or 'Mitie' }}</td>
+            <td>{{ r['hostname'] }}</td>
+            <td>{{ r['numero_serie'] }}</td>
+            <td>{{ r['apellidos_nombre'] }}</td>
+            <td>{{ r['notas'] }}</td>
+            <td>{{ r['usuario'] }}</td>
+            <td>{{ r['timestamp'] }}</td>
+            {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
+            <td><a href="/history_computers/{{ r['id'] }}/editar" class="btn-secondary btn-small">Editar</a></td>
+            {% endif %}
+          </tr>
+          {% else %}
+          <tr><td colspan="9">No hay registros.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

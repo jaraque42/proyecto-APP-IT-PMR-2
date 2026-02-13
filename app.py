@@ -71,7 +71,8 @@ def init_db():
     
     # Create computers table if not exists
     cursor.execute("PRAGMA table_info(computers)")
-    if not cursor.fetchall():
+    comp_columns = [column[1] for column in cursor.fetchall()]
+    if not comp_columns:
         conn.execute('''
             CREATE TABLE computers (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -81,9 +82,13 @@ def init_db():
                 notas TEXT,
                 tipo TEXT,
                 usuario TEXT,
-                timestamp TEXT
+                timestamp TEXT,
+                proyecto TEXT DEFAULT 'Mitie'
             )
         ''')
+    else:
+        if 'proyecto' not in comp_columns:
+            conn.execute("ALTER TABLE computers ADD COLUMN proyecto TEXT DEFAULT 'Mitie'")
     
     # Create incidencias table if not exists
     cursor.execute("PRAGMA table_info(incidencias)")
@@ -512,6 +517,62 @@ def incidencias_computer():
     
     return render_template('incidencias_computer.html')
 
+@app.route('/Entrada_computer_aena', methods=['GET', 'POST'])
+def Entrada_computer_aena():
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        hostname = request.form.get('hostname', '').strip()
+        numero_serie = request.form.get('numero_serie', '').strip()
+        apellidos_nombre = request.form.get('apellidos_nombre', '').strip()
+        notas = request.form.get('notas', '').strip()
+        usuario = current_user.username
+        timestamp = datetime.now().isoformat()
+        
+        if not hostname:
+            flash('Hostname es requerido', 'error')
+            return render_template('entrega_computer_aena.html')
+        
+        db = get_db()
+        db.execute(
+            'INSERT INTO computers (hostname, numero_serie, apellidos_nombre, notas, tipo, usuario, timestamp, proyecto) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            (hostname, numero_serie, apellidos_nombre, notas, 'Entrega', usuario, timestamp, 'AENA')
+        )
+        db.commit()
+        flash('Computer AENA entregado correctamente', 'success')
+        return redirect(url_for('index'))
+    
+    return render_template('entrega_computer_aena.html')
+
+@app.route('/incidencias_computer_aena', methods=['GET', 'POST'])
+def incidencias_computer_aena():
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        hostname = request.form.get('hostname', '').strip()
+        numero_serie = request.form.get('numero_serie', '').strip()
+        apellidos_nombre = request.form.get('apellidos_nombre', '').strip()
+        notas = request.form.get('notas', '').strip()
+        usuario = current_user.username
+        timestamp = datetime.now().isoformat()
+        
+        if not hostname:
+            flash('Hostname es requerido', 'error')
+            return render_template('incidencias_computer_aena.html')
+        
+        db = get_db()
+        db.execute(
+            'INSERT INTO computers (hostname, numero_serie, apellidos_nombre, notas, tipo, usuario, timestamp, proyecto) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            (hostname, numero_serie, apellidos_nombre, notas, 'Incidencia', usuario, timestamp, 'AENA')
+        )
+        db.commit()
+        flash('Incidencia AENA registrada correctamente', 'success')
+        return redirect(url_for('index'))
+    
+    return render_template('incidencias_computer_aena.html')
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -820,26 +881,49 @@ def clear_history():
     return redirect(url_for('history_entrega'))
 
 
-@app.route('/history/delete-selected', methods=['POST'])
-@require_permission('borrar_registros')
-def delete_selected():
-    """Borrar registros seleccionados con verificación de contraseña"""
+def _delete_selected_history(ids_param, tipos, redirect_endpoint):
+    """Borrar registros seleccionados con verificación de contraseña."""
     password = request.form.get('password', '').strip()
-    ids_param = request.form.get('ids', '').strip()
-    
-    # Verificar contraseña
+
     if password != '4j_6WbTT7scyicJcam':
-        return redirect(url_for('history_entrega') + '?error=Invalid password')
-    
+        return redirect(url_for(redirect_endpoint) + '?error=Invalid password')
+
     if ids_param:
         id_list = [int(i) for i in ids_param.split(',') if i.strip().isdigit()]
         if id_list:
             db = get_db()
             placeholders = ','.join(['?'] * len(id_list))
-            db.execute(f'DELETE FROM entregas WHERE id IN ({placeholders})', id_list)
+            tipo_placeholders = ','.join(['?'] * len(tipos))
+            query = (
+                f'DELETE FROM entregas '
+                f'WHERE id IN ({placeholders}) '
+                f'AND LOWER(tipo) IN ({tipo_placeholders})'
+            )
+            db.execute(query, id_list + tipos)
             db.commit()
-    
-    return redirect(url_for('history_entrega'))
+
+    return redirect(url_for(redirect_endpoint))
+
+
+@app.route('/history/delete-selected', methods=['POST'])
+@require_permission('borrar_registros')
+def delete_selected():
+    ids_param = request.form.get('ids', '').strip()
+    return _delete_selected_history(ids_param, ['entrega', 'entregas'], 'history_entrega')
+
+
+@app.route('/history_entrega/delete-selected', methods=['POST'])
+@require_permission('borrar_registros')
+def delete_selected_entrega():
+    ids_param = request.form.get('ids', '').strip()
+    return _delete_selected_history(ids_param, ['entrega', 'entregas'], 'history_entrega')
+
+
+@app.route('/history_recepcion/delete-selected', methods=['POST'])
+@require_permission('borrar_registros')
+def delete_selected_recepcion():
+    ids_param = request.form.get('ids', '').strip()
+    return _delete_selected_history(ids_param, ['recepcion', 'recepción', 'recepciones'], 'history_recepcion')
 
 
 @app.route('/history/export')
@@ -1021,6 +1105,280 @@ def history_recepcion():
     cur = db.execute(query, params)
     rows = cur.fetchall()
     return render_template('history_recepcion.html', rows=rows, imei_search=imei_search, usuario_search=usuario_search, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin)
+
+
+@app.route('/history_computers_entrega')
+@require_permission('ver_historico')
+def history_computers_entrega():
+    db = get_db()
+    hostname_search = request.args.get('hostname', '').strip()
+    sn_search = request.args.get('sn', '').strip()
+    proyecto_filter = request.args.get('proyecto', '').strip()
+    
+    query = 'SELECT * FROM computers WHERE tipo = "Entrega" AND 1=1'
+    params = []
+    
+    if hostname_search:
+        query += ' AND hostname LIKE ?'
+        params.append(f'%{hostname_search}%')
+    if sn_search:
+        query += ' AND numero_serie LIKE ?'
+        params.append(f'%{sn_search}%')
+    if proyecto_filter:
+        query += ' AND proyecto = ?'
+        params.append(proyecto_filter)
+        
+    query += ' ORDER BY timestamp DESC'
+    rows = db.execute(query, params).fetchall()
+    return render_template('history_computers.html', rows=rows, title="Histórico Entregas Computer", 
+                           hostname_search=hostname_search, sn_search=sn_search, proyecto_filter=proyecto_filter,
+                           tipo_actual="Entrega")
+
+@app.route('/history_computers_recepcion')
+@require_permission('ver_historico')
+def history_computers_recepcion():
+    db = get_db()
+    hostname_search = request.args.get('hostname', '').strip()
+    sn_search = request.args.get('sn', '').strip()
+    proyecto_filter = request.args.get('proyecto', '').strip()
+    
+    query = 'SELECT * FROM computers WHERE tipo = "Recepción" AND 1=1'
+    params = []
+    
+    if hostname_search:
+        query += ' AND hostname LIKE ?'
+        params.append(f'%{hostname_search}%')
+    if sn_search:
+        query += ' AND numero_serie LIKE ?'
+        params.append(f'%{sn_search}%')
+    if proyecto_filter:
+        query += ' AND proyecto = ?'
+        params.append(proyecto_filter)
+        
+    query += ' ORDER BY timestamp DESC'
+    rows = db.execute(query, params).fetchall()
+    return render_template('history_computers.html', rows=rows, title="Histórico Recepciones Computer", 
+                           hostname_search=hostname_search, sn_search=sn_search, proyecto_filter=proyecto_filter,
+                           tipo_actual="Recepción")
+
+@app.route('/history_computers_incidencias')
+@require_permission('ver_historico')
+def history_computers_incidencias():
+    db = get_db()
+    hostname_search = request.args.get('hostname', '').strip()
+    sn_search = request.args.get('sn', '').strip()
+    proyecto_filter = request.args.get('proyecto', '').strip()
+    
+    query = 'SELECT * FROM computers WHERE tipo = "Incidencia" AND 1=1'
+    params = []
+    
+    if hostname_search:
+        query += ' AND hostname LIKE ?'
+        params.append(f'%{hostname_search}%')
+    if sn_search:
+        query += ' AND numero_serie LIKE ?'
+        params.append(f'%{sn_search}%')
+    if proyecto_filter:
+        query += ' AND proyecto = ?'
+        params.append(proyecto_filter)
+        
+    query += ' ORDER BY timestamp DESC'
+    rows = db.execute(query, params).fetchall()
+    return render_template('history_computers.html', rows=rows, title="Histórico Incidencias Computer", 
+                           hostname_search=hostname_search, sn_search=sn_search, proyecto_filter=proyecto_filter,
+                           tipo_actual="Incidencia")
+
+
+@app.route('/history_computers/export')
+@require_permission('ver_historico')
+def export_history_computers():
+    db = get_db()
+    hostname_search = request.args.get('hostname', '').strip()
+    sn_search = request.args.get('sn', '').strip()
+    proyecto_filter = request.args.get('proyecto', '').strip()
+    tipo_filter = request.args.get('tipo', '').strip()
+
+    query = 'SELECT proyecto, hostname, numero_serie, apellidos_nombre, notas, usuario, timestamp, tipo FROM computers WHERE 1=1'
+    params = []
+
+    if tipo_filter:
+        query += ' AND tipo = ?'
+        params.append(tipo_filter)
+    if hostname_search:
+        query += ' AND hostname LIKE ?'
+        params.append(f'%{hostname_search}%')
+    if sn_search:
+        query += ' AND numero_serie LIKE ?'
+        params.append(f'%{sn_search}%')
+    if proyecto_filter:
+        query += ' AND proyecto = ?'
+        params.append(proyecto_filter)
+
+    query += ' ORDER BY timestamp DESC'
+    rows = db.execute(query, params).fetchall()
+
+    wb = Workbook()
+    ws = wb.active
+    ws.append(['Proyecto', 'Hostname', 'S/N', 'Persona', 'Notas', 'Registrado por', 'Fecha', 'Tipo'])
+    for r in rows:
+        ws.append([
+            r['proyecto'] or 'Mitie',
+            r['hostname'] or '',
+            r['numero_serie'] or '',
+            r['apellidos_nombre'] or '',
+            r['notas'] or '',
+            r['usuario'] or '',
+            r['timestamp'] or '',
+            r['tipo'] or ''
+        ])
+
+    bio = io.BytesIO()
+    wb.save(bio)
+    bio.seek(0)
+    filename = f"historico_computers_{tipo_filter or 'todos'}.xlsx"
+    return send_file(bio, as_attachment=True, download_name=filename, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+
+@app.route('/history_computers/delete-selected', methods=['POST'])
+@require_permission('borrar_registros')
+def delete_selected_computers():
+    """Borrar registros de computers seleccionados con verificación de contraseña."""
+    password = request.form.get('password', '').strip()
+    ids_param = request.form.get('ids', '').strip()
+
+    if password != '4j_6WbTT7scyicJcam':
+        return redirect(request.referrer or url_for('index'))
+
+    if ids_param:
+        id_list = [int(i) for i in ids_param.split(',') if i.strip().isdigit()]
+        if id_list:
+            db = get_db()
+            placeholders = ','.join(['?'] * len(id_list))
+            query = f'DELETE FROM computers WHERE id IN ({placeholders})'
+            db.execute(query, id_list)
+            db.commit()
+
+    return redirect(request.referrer or url_for('index'))
+
+
+@app.route('/history_computers/<int:computer_id>/editar', methods=['GET', 'POST'])
+@require_permission('administracion')
+def editar_computer(computer_id):
+    db = get_db()
+    cur = db.execute('SELECT * FROM computers WHERE id = ?', (computer_id,))
+    r = cur.fetchone()
+    if not r:
+        flash('Registro no encontrado', 'error')
+        return redirect(request.referrer or url_for('index'))
+
+    if request.method == 'GET':
+        return render_template('edit_computer.html', r=r)
+
+    # POST: procesar actualización
+    proyecto = request.form.get('proyecto', 'Mitie').strip()
+    hostname = request.form.get('hostname', '').strip()
+    numero_serie = request.form.get('numero_serie', '').strip()
+    apellidos_nombre = request.form.get('apellidos_nombre', '').strip()
+    notas = request.form.get('notas', '').strip()
+    tipo = request.form.get('tipo', 'Entrega').strip()
+
+    db.execute('''
+        UPDATE computers 
+        SET proyecto = ?, hostname = ?, numero_serie = ?, apellidos_nombre = ?, notas = ?, tipo = ?
+        WHERE id = ?
+    ''', (proyecto, hostname, numero_serie, apellidos_nombre, notas, tipo, computer_id))
+    db.commit()
+
+    flash('Registro actualizado correctamente', 'success')
+    
+    # Redirigir según el tipo de registro actualizado
+    if tipo == "Entrega":
+        return redirect(url_for('history_computers_entrega'))
+    elif tipo == "Recepción":
+        return redirect(url_for('history_computers_recepcion'))
+    else:
+        return redirect(url_for('history_computers_incidencias'))
+
+
+@app.route('/history_computers/import', methods=['GET', 'POST'])
+@require_permission('registrar')
+def import_computers():
+    if request.method == 'GET':
+        return render_template('import_computers.html')
+
+    file = request.files.get('file')
+    if not file or file.filename == '':
+        flash('No se seleccionó ningún archivo.', 'error')
+        return redirect(url_for('import_computers'))
+
+    data = file.read()
+    filename = (file.filename or '').lower()
+    rows = []
+    errors = []
+
+    try:
+        if filename.endswith('.csv'):
+            text = data.decode('utf-8-sig')
+            reader = csv.DictReader(io.StringIO(text))
+            for r in reader:
+                rows.append(r)
+        elif filename.endswith('.xlsx') or filename.endswith('.xlsm') or filename.endswith('.xls'):
+            wb = load_workbook(filename=io.BytesIO(data), read_only=True, data_only=True)
+            ws = wb.active
+            it = ws.iter_rows(values_only=True)
+            try:
+                headers = [str(h).strip() if h is not None else '' for h in next(it)]
+            except StopIteration:
+                headers = []
+            for row in it:
+                rowdict = {}
+                for i, h in enumerate(headers):
+                    key = h if h is not None else f'col{i}'
+                    val = row[i] if i < len(row) else None
+                    if val is not None:
+                        if isinstance(val, float) and val.is_integer():
+                            val = str(int(val))
+                        else:
+                            val = str(val)
+                    rowdict[key] = val
+                rows.append(rowdict)
+        else:
+            flash('Formato no soportado. Suba CSV o XLSX.', 'error')
+            return redirect(url_for('import_computers'))
+    except Exception as e:
+        flash(f'Error al procesar el archivo: {e}', 'error')
+        return redirect(url_for('import_computers'))
+
+    inserted = 0
+    if rows:
+        db = get_db()
+        for r in rows:
+            proyecto = _get_value(r, ['proyecto', 'PROYECTO']) or 'Mitie'
+            hostname = _get_value(r, ['hostname', 'HOSTNAME', 'equipo'])
+            numero_serie = _get_value(r, ['numero_serie', 'serial', 'sn', 'SN'])
+            apellidos_nombre = _get_value(r, ['apellidos_nombre', 'persona', 'usuario_equipo'])
+            notas = _get_value(r, ['notas', 'observaciones'])
+            tipo = _get_value(r, ['tipo', 'TIPO']) or 'Entrega'
+            usuario = current_user.username
+            timestamp = datetime.now().isoformat()
+
+            if not hostname:
+                errors.append(f'Fila sin hostname omitida.')
+                continue
+
+            try:
+                db.execute('INSERT INTO computers (hostname, numero_serie, apellidos_nombre, notas, tipo, usuario, timestamp, proyecto) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                           (hostname, numero_serie, apellidos_nombre, notas, tipo, usuario, timestamp, proyecto))
+                inserted += 1
+            except Exception as e:
+                errors.append(f'Error insertando equipo {hostname}: {e}')
+        db.commit()
+
+    flash(f'Se insertaron {inserted} registros de computers.', 'success' if inserted > 0 else 'warning')
+    if errors:
+        for err in errors[:5]:
+            flash(err, 'error')
+    return redirect(url_for('history_computers_entrega'))
 
 
 def _get_value(row, keys):

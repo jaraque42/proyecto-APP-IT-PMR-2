@@ -13,11 +13,9 @@
       .form-group input { width: 100%; padding: 10px; border: 1px solid #e7e7e7; border-radius: 6px; font-size: 14px; }
       .form-group input:focus { outline: none; border-color: #667eea; background: #f9f9ff; }
       .form-actions { display: flex; gap: 10px; margin-top: 30px; }
-      .btn { flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-      .btn-primary { background: #667eea; color: white; }
-      .btn-primary:hover { background: #5568d3; }
-      .btn-secondary { background: #e7e7e7; color: #333; }
-      .btn-secondary:hover { background: #d7d7d7; }
+      .btn { flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; text-decoration: none; }
+      .btn-cancel { background: #e7e7e7; color: #333; }
+      .btn-cancel:hover { background: #d7d7d7; }
     </style>
   </head>
   <body>
@@ -64,8 +62,8 @@
             <input type="text" name="dni_nie" placeholder="Ej: 12345678X">
           </div>
           <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Crear Usuario</button>
-            <a href="/usuarios_gtd_sgpmr" class="btn btn-secondary" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Cancelar</a>
+            <button type="submit" class="btn btn-secondary">Crear Usuario</button>
+            <a href="/usuarios_gtd_sgpmr" class="btn btn-cancel">Cancelar</a>
           </div>
         </form>
       </div>

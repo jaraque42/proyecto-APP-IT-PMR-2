@@ -69,20 +69,14 @@
         font-weight: bold;
         cursor: pointer;
         transition: all 0.3s;
+        text-align: center;
+        text-decoration: none;
       }
-      .btn-primary {
-        background: #667eea;
-        color: white;
-      }
-      .btn-primary:hover {
-        background: #5568d3;
-        transform: translateY(-2px);
-      }
-      .btn-secondary {
+      .btn-cancel {
         background: #e7e7e7;
         color: #333;
       }
-      .btn-secondary:hover {
+      .btn-cancel:hover {
         background: #d7d7d7;
       }
       .alert {
@@ -204,13 +198,13 @@
             </div>
 
             <div class="form-actions">
-              <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-              <a href="/administracion" class="btn btn-secondary" style="text-decoration: none; display: flex; align-items: center; justify-content: center;">Cancelar</a>
+              <button type="submit" class="btn btn-secondary">Guardar Cambios</button>
+              <a href="/administracion" class="btn btn-cancel">Cancelar</a>
             </div>
           </form>
         {% else %}
           <p style="color: #999;">Usuario no encontrado.</p>
-          <a href="/administracion" class="btn btn-secondary" style="display: inline-block; text-decoration: none; padding: 10px 20px;">Volver a Administración</a>
+          <a href="/administracion" class="btn btn-secondary" style="display: inline-block;">Volver a Administración</a>
         {% endif %}
       </div>
     </main>
