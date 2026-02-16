@@ -23,11 +23,18 @@
           </div>
         </div>
         <div class="dropdown">
-          <button class="btn secondary menu-trigger" aria-expanded="false" type="button">Computer ▾</button>
+          <button class="btn secondary menu-trigger" aria-expanded="false" type="button">Computer Mitie ▾</button>
           <div class="dropdown-content" role="menu">
-            <a role="menuitem" href="/history_computers_entrega">Historico Entregas Computer</a>
-            <a role="menuitem" href="/history_computers_recepcion">Historico Recepcion Computer</a>
-            <a role="menuitem" href="/history_computers_incidencias">Historico Incidencias Computer</a>
+            <a role="menuitem" href="/history_computers_entrega?proyecto=Mitie">Historico Entregas</a>
+            <a role="menuitem" href="/history_computers_recepcion?proyecto=Mitie">Historico Recepcion</a>
+            <a role="menuitem" href="/history_computers_incidencias?proyecto=Mitie">Historico Incidencias</a>
+          </div>
+        </div>
+        <div class="dropdown">
+          <button class="btn secondary menu-trigger" aria-expanded="false" type="button">Computer AENA ▾</button>
+          <div class="dropdown-content" role="menu">
+            <a role="menuitem" href="/history_computers_entrega?proyecto=AENA">Historico Entregas</a>
+            <a role="menuitem" href="/history_computers_incidencias?proyecto=AENA">Historico Incidencias</a>
           </div>
         </div>
         <div class="dropdown">
@@ -44,7 +51,6 @@
             {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
               <a role="menuitem" href="/administracion">Administración</a>
             {% endif %}
-            <a role="menuitem" href="/logout">Cerrar Sesión</a>
           </div>
         </div>
       </div>
@@ -75,6 +81,10 @@
           <a href="/entrega_computer" style="display:inline-block;padding:8px 14px;background:#52535293;color:rgb(55, 54, 54);text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,0.1);text-align:center;width:130px;">Entrega Computer</a>
           <a href="/recepcion_computer" style="display:inline-block;padding:8px 14px;background:#52535293;color:rgb(55, 54, 54);text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,0.1);text-align:center;width:130px;">Recepcion Computer</a>
           <a href="/incidencias_computer" style="display:inline-block;padding:8px 14px;background:#52535293;color:rgb(55, 54, 54);text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,0.1);text-align:center;width:130px;">Incidencias Computer</a>
+          <div style="width:100%; border-top:1px solid #eee; margin: 4px 0;"></div>
+          <a href="/history_computers_entrega?proyecto=Mitie" style="display:inline-block;padding:8px 14px;background:#e9ecef;color:#495057;text-decoration:none;border-radius:6px;font-weight:600;font-size:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);text-align:center;width:130px;">Histórico Entregas</a>
+          <a href="/history_computers_recepcion?proyecto=Mitie" style="display:inline-block;padding:8px 14px;background:#e9ecef;color:#495057;text-decoration:none;border-radius:6px;font-weight:600;font-size:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);text-align:center;width:130px;">Histórico Recepción</a>
+          <a href="/history_computers_incidencias?proyecto=Mitie" style="display:inline-block;padding:8px 14px;background:#e9ecef;color:#495057;text-decoration:none;border-radius:6px;font-weight:600;font-size:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);text-align:center;width:130px;">Histórico Incidencias</a>
         </div>
       </section>
 
@@ -83,6 +93,9 @@
         <div style="display:flex;flex-wrap:wrap;gap:8px;">
           <a href="/Entrada_computer_aena" style="display:inline-block;padding:8px 14px;background:#52535293;color:rgb(55, 54, 54);text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,0.1);text-align:center;width:130px;">Entrega Computer</a>          
           <a href="/incidencias_computer_aena" style="display:inline-block;padding:8px 14px;background:#52535293;color:rgb(55, 54, 54);text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,0.1);text-align:center;width:130px;">Incidencias Computer</a>
+          <div style="width:100%; border-top:1px solid #eee; margin: 4px 0;"></div>
+          <a href="/history_computers_entrega?proyecto=AENA" style="display:inline-block;padding:8px 14px;background:#e9ecef;color:#495057;text-decoration:none;border-radius:6px;font-weight:600;font-size:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);text-align:center;width:130px;">Histórico Entregas</a>
+          <a href="/history_computers_incidencias?proyecto=AENA" style="display:inline-block;padding:8px 14px;background:#e9ecef;color:#495057;text-decoration:none;border-radius:6px;font-weight:600;font-size:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);text-align:center;width:130px;">Histórico Incidencias</a>
         </div>
       </section>     
       

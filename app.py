@@ -452,8 +452,8 @@ def entrega_computer():
         
         db = get_db()
         db.execute(
-            'INSERT INTO computers (hostname, numero_serie, apellidos_nombre, notas, tipo, usuario, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            (hostname, numero_serie, apellidos_nombre, notas, 'Entrega', usuario, timestamp)
+            'INSERT INTO computers (hostname, numero_serie, apellidos_nombre, notas, tipo, usuario, timestamp, proyecto) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            (hostname, numero_serie, apellidos_nombre, notas, 'Entrega', usuario, timestamp, 'Mitie')
         )
         db.commit()
         flash('Computer entregado correctamente', 'success')
@@ -480,8 +480,8 @@ def recepcion_computer():
         
         db = get_db()
         db.execute(
-            'INSERT INTO computers (hostname, numero_serie, apellidos_nombre, notas, tipo, usuario, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            (hostname, numero_serie, apellidos_nombre, notas, 'Recepción', usuario, timestamp)
+            'INSERT INTO computers (hostname, numero_serie, apellidos_nombre, notas, tipo, usuario, timestamp, proyecto) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            (hostname, numero_serie, apellidos_nombre, notas, 'Recepción', usuario, timestamp, 'Mitie')
         )
         db.commit()
         flash('Computer recibido correctamente', 'success')
@@ -508,8 +508,8 @@ def incidencias_computer():
         
         db = get_db()
         db.execute(
-            'INSERT INTO computers (hostname, numero_serie, apellidos_nombre, notas, tipo, usuario, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            (hostname, numero_serie, apellidos_nombre, notas, 'Incidencia', usuario, timestamp)
+            'INSERT INTO computers (hostname, numero_serie, apellidos_nombre, notas, tipo, usuario, timestamp, proyecto) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            (hostname, numero_serie, apellidos_nombre, notas, 'Incidencia', usuario, timestamp, 'Mitie')
         )
         db.commit()
         flash('Incidencia registrada correctamente', 'success')
@@ -1149,7 +1149,8 @@ def history_computers_entrega():
         
     query += ' ORDER BY timestamp DESC'
     rows = db.execute(query, params).fetchall()
-    return render_template('history_computers.html', rows=rows, title="Histórico Entregas Computer", 
+    display_title = f"Histórico Entregas Computer {'- ' + proyecto_filter if proyecto_filter else ''}"
+    return render_template('history_computers.html', rows=rows, title=display_title, 
                            hostname_search=hostname_search, sn_search=sn_search, proyecto_filter=proyecto_filter,
                            tipo_actual="Entrega")
 
@@ -1176,7 +1177,8 @@ def history_computers_recepcion():
         
     query += ' ORDER BY timestamp DESC'
     rows = db.execute(query, params).fetchall()
-    return render_template('history_computers.html', rows=rows, title="Histórico Recepciones Computer", 
+    display_title = f"Histórico Recepciones Computer {'- ' + proyecto_filter if proyecto_filter else ''}"
+    return render_template('history_computers.html', rows=rows, title=display_title, 
                            hostname_search=hostname_search, sn_search=sn_search, proyecto_filter=proyecto_filter,
                            tipo_actual="Recepción")
 
@@ -1203,7 +1205,8 @@ def history_computers_incidencias():
         
     query += ' ORDER BY timestamp DESC'
     rows = db.execute(query, params).fetchall()
-    return render_template('history_computers.html', rows=rows, title="Histórico Incidencias Computer", 
+    display_title = f"Histórico Incidencias Computer {'- ' + proyecto_filter if proyecto_filter else ''}"
+    return render_template('history_computers.html', rows=rows, title=display_title, 
                            hostname_search=hostname_search, sn_search=sn_search, proyecto_filter=proyecto_filter,
                            tipo_actual="Incidencia")
 
