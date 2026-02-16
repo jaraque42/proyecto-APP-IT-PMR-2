@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Entrega / Recepción - Teléfonos</title>
     <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
     <header class="topbar">
@@ -56,7 +57,7 @@
       </div>
     </header>
 
-    <main class="container" style="display:flex; flex-wrap:wrap; gap:30px; justify-content:center; width:90%; max-width:1400px; margin: 0 auto; padding-top: 30px;">
+    <main class="container" style="display:flex; flex-wrap:wrap; gap:30px; justify-content:center; width:90%; max-width:1400px; margin: 0 auto; padding-top: 30px; flex-direction: row;">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
           <script>window.server_messages = {{ messages | tojson }};</script>
@@ -72,6 +73,10 @@
           <a href="/entrega_moviles" style="display:inline-block;padding:8px 14px;background:#52535293;color:rgb(55, 54, 54);text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,0.1);text-align:center;width:130px;">Entrega moviles</a>
           <a href="/recepcion_moviles" style="display:inline-block;padding:8px 14px;background:#52535293;color:rgb(55, 54, 54);text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,0.1);text-align:center;width:130px;">Recepcion moviles</a>
           <a href="/incidencias_moviles" style="display:inline-block;padding:8px 14px;background:#52535293;color:rgb(55, 54, 54);text-decoration:none;border-radius:6px;font-weight:600;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,0.1);text-align:center;width:130px;">Incidencias moviles</a>
+          <div style="width:100%; border-top:1px solid #eee; margin: 4px 0;"></div>
+          <a href="/history_entrega" style="display:inline-block;padding:8px 14px;background:#e9ecef;color:#495057;text-decoration:none;border-radius:6px;font-weight:600;font-size:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);text-align:center;width:130px;">Histórico Entregas</a>
+          <a href="/history_recepcion" style="display:inline-block;padding:8px 14px;background:#e9ecef;color:#495057;text-decoration:none;border-radius:6px;font-weight:600;font-size:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);text-align:center;width:130px;">Histórico Recepción</a>
+          <a href="/incidents" style="display:inline-block;padding:8px 14px;background:#e9ecef;color:#495057;text-decoration:none;border-radius:6px;font-weight:600;font-size:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);text-align:center;width:130px;">Histórico Incidencias</a>
         </div>
       </section>
 
@@ -97,11 +102,48 @@
           <a href="/history_computers_entrega?proyecto=AENA" style="display:inline-block;padding:8px 14px;background:#e9ecef;color:#495057;text-decoration:none;border-radius:6px;font-weight:600;font-size:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);text-align:center;width:130px;">Histórico Entregas</a>
           <a href="/history_computers_incidencias?proyecto=AENA" style="display:inline-block;padding:8px 14px;background:#e9ecef;color:#495057;text-decoration:none;border-radius:6px;font-weight:600;font-size:12px;box-shadow:0 1px 3px rgba(0,0,0,0.05);text-align:center;width:130px;">Histórico Incidencias</a>
         </div>
-      </section>     
+      </section>   
+
+      <!-- Gráfica Circular -->
+      <section class="card" style="background:#ffffffee;padding:18px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.04);width:450px;color:#ffffff;text-align:center;">
+        <h2 style="margin-top:0;color:#797a7a;margin-bottom:12px;text-align:left;">Resumen Global</h2>
+        <div style="width: 250px; margin: 0 auto;">
+          <canvas id="totalChart"></canvas>
+        </div>
+        <div style="margin-top:15px; display:flex; justify-content:center; gap:20px; color:#495057; font-weight:600; font-size:13px;">
+          <span style="display:flex; align-items:center; gap:5px;"><span style="width:12px; height:12px; background:#003666; border-radius:3px;"></span> Entregas: {{ total_entregas }}</span>
+          <span style="display:flex; align-items:center; gap:5px;"><span style="width:12px; height:12px; background:#e30613; border-radius:3px;"></span> Incidencias: {{ total_incidencias }}</span>
+        </div>
+      </section>
       
     </main>
 
     <script src="/static/app.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('totalChart').getContext('2d');
+        new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Entregas', 'Incidencias'],
+            datasets: [{
+              data: [{{ total_entregas }}, {{ total_incidencias }}],
+              backgroundColor: ['#003666', '#e30613'],
+              borderWidth: 0,
+              hoverOffset: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+              legend: { display: false }
+            },
+            cutout: '70%'
+          }
+        });
+      });
+    </script>
   </body>
     <div class="bg-logo" aria-hidden="true"></div>
 </html>

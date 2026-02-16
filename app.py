@@ -413,7 +413,20 @@ def close_connection(exception):
 def index():
     if not current_user.is_authenticated:
         return redirect(url_for('login'))
-    return render_template('index.html')
+    
+    db = get_db()
+    
+    # Contar entregas totales (Móviles + Computers)
+    count_entregas_moviles = db.execute("SELECT COUNT(*) FROM entregas WHERE LOWER(tipo) LIKE 'entrega%'").fetchone()[0]
+    count_entregas_comp = db.execute("SELECT COUNT(*) FROM computers WHERE tipo = 'Entrega'").fetchone()[0]
+    total_entregas = count_entregas_moviles + count_entregas_comp
+    
+    # Contar incidencias totales (Móviles + Computers)
+    count_incidencias_moviles = db.execute("SELECT COUNT(*) FROM incidencias").fetchone()[0]
+    count_incidencias_comp = db.execute("SELECT COUNT(*) FROM computers WHERE tipo = 'Incidencia'").fetchone()[0]
+    total_incidencias = count_incidencias_moviles + count_incidencias_comp
+    
+    return render_template('index.html', total_entregas=total_entregas, total_incidencias=total_incidencias)
 
 @app.route('/entrega_moviles', methods=['GET'])
 def entrega_moviles():

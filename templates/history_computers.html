@@ -38,15 +38,9 @@
       <div class="search-box">
         <h3>Búsqueda y Herramientas</h3>
         <form method="get" style="display:inline-block;">
+          <input type="hidden" name="proyecto" value="{{ proyecto_filter }}">
           <label>Hostname: <input type="text" name="hostname" value="{{ hostname_search }}"></label>
           <label>S/N: <input type="text" name="sn" value="{{ sn_search }}"></label>
-          <label>Proyecto: 
-            <select name="proyecto">
-                <option value="">Todos</option>
-                <option value="Mitie" {% if proyecto_filter == 'Mitie' %}selected{% endif %}>Mitie</option>
-                <option value="AENA" {% if proyecto_filter == 'AENA' %}selected{% endif %}>AENA</option>
-            </select>
-          </label>
           <button type="submit" class="btn-secondary btn-small">Buscar</button>
         </form>
         <div class="search-actions">
