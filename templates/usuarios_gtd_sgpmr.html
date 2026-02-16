@@ -22,7 +22,7 @@
       </div>
     </header>
 
-    <main class="container" style="flex-direction: column; flex: 1; padding: 24px;">
+    <main class="container" style="display: block; flex: 1; padding: 24px;">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
           <script>window.server_messages = {{ messages | tojson }};</script>
@@ -46,9 +46,11 @@
         </div>
       </div>
 
-      <div style="margin-top:12px">
-        <button id="delete-selected-usuarios-btn" type="button" class="btn-secondary btn-small btn-danger">Borrar seleccionados</button>
-      </div>
+      {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
+        <div style="margin-top:12px; margin-block-end: 12px;">
+          <button id="delete-selected-usuarios-btn" class="btn-secondary" style="background-color: #dc3545; color: white; border-color: #dc3545;">Eliminar selección</button>
+        </div>
+      {% endif %}
 
       <div class="table-container">
         <table>
@@ -75,12 +77,13 @@
                 <td>{{ usuario['dni_nie'] or '-' }}</td>
                 <td>{{ usuario['fecha_creacion'][:10] if usuario['fecha_creacion'] else '-' }}</td>
                 <td>
+                  {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
                   <div class="actions">
                     <a href="/usuarios_gtd_sgpmr/{{ usuario['id'] }}/editar" class="btn-secondary btn-small">Editar</a>
-                    <form method="post" action="/usuarios_gtd_sgpmr/{{ usuario['id'] }}/eliminar" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este usuario?');">
-                      <button type="submit" class="btn-secondary btn-small btn-danger">Eliminar</button>
-                    </form>
                   </div>
+                  {% else %}
+                    -
+                  {% endif %}
                 </td>
               </tr>
             {% else %}

@@ -175,3 +175,38 @@ body.dark .dropdown-item:hover{background:#1f1f1f}
 body.dark .dropdown-item{color:#e9edf0}
 body.dark .dropdown-item:hover{background:#2b2b2b}
 
+.table-container {
+  width: auto;
+  margin-left: -24px;
+  margin-right: -24px;
+  align-self: stretch;
+  overflow-x: auto;
+  background: #fff;
+  border-radius: 0;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+}
+
+.header-actions, .admin-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  flex-wrap: nowrap;
+  margin-bottom: 20px;
+}
+
+.header-actions > * {
+  flex-shrink: 0;
+}
+
+@media (max-width:800px) {
+  .table-container {
+    margin-left: -12px;
+    margin-right: -12px;
+  }
+}
+
+body.dark .table-container {
+  background: #121416;
+  box-shadow: none;
+}

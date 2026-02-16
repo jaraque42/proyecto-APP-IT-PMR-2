@@ -32,7 +32,7 @@
       </div>
     </header>
 
-    <main class="container" style="flex-direction: column; height: auto;">
+    <main class="container" style="display: block; height: auto; padding: 24px;">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
           <script>window.server_messages = {{ messages | tojson }};</script>

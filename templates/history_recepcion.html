@@ -16,8 +16,7 @@
           {% endif %}
           <div>
         <a class="history-link" href="/">Volver</a>
-        &nbsp;|&nbsp;
-        <a class="history-link" href="/history_entrega">Histórico Entregas</a>
+        
         {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
           &nbsp;|&nbsp;
           <a class="history-link" href="/administracion">Administración</a>

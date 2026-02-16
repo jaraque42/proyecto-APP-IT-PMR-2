@@ -1,6 +1,30 @@
 // Nota: se eliminó el prefijado automático '34' por petición del usuario.
 // La normalización/validación se realiza en el servidor.
 
+// Función global para manejar borrado con contraseña admin
+window.confirmAdminDelete = function(event, message) {
+  if (!confirm(message)) {
+    event.preventDefault();
+    return false;
+  }
+  const password = prompt("Introduce la contraseña de ADMIN para confirmar:");
+  if (!password) {
+    event.preventDefault();
+    return false;
+  }
+  
+  const form = event.target;
+  let passInput = form.querySelector('input[name="admin_password"]');
+  if (!passInput) {
+    passInput = document.createElement('input');
+    passInput.type = 'hidden';
+    passInput.name = 'admin_password';
+    form.appendChild(passInput);
+  }
+  passInput.value = password;
+  return true;
+};
+
 // Validación ligera y UX mínima
 document.addEventListener('submit', function(e){
   const form = e.target;
@@ -241,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function(){
         deleteUrl = '/history_recepcion/delete-selected';
       } else if(currentPath.includes('/inventario_telefonos')){
         deleteUrl = '/inventario_telefonos/delete-selected';
-        requiresPassword = false;
+        requiresPassword = true;
       } else if(currentPath.includes('/history_computers')){
         deleteUrl = '/history_computers/delete-selected';
       }
@@ -254,13 +278,14 @@ document.addEventListener('DOMContentLoaded', function(){
       form.appendChild(idsInput);
       
       if(requiresPassword){
-        const password = prompt('Introduce la contraseña para borrar:');
+        const promptMsg = currentPath.includes('/inventario_telefonos') ? 'Introduce la contraseña de ADMIN para borrar:' : 'Introduce la contraseña para borrar:';
+        const password = prompt(promptMsg);
         if(!password){
           return;
         }
         const passInput = document.createElement('input');
         passInput.type = 'hidden';
-        passInput.name = 'password';
+        passInput.name = currentPath.includes('/inventario_telefonos') ? 'admin_password' : 'password';
         passInput.value = password;
         form.appendChild(passInput);
       }
@@ -560,23 +585,37 @@ document.addEventListener('DOMContentLoaded', function(){
         return;
       }
 
+      const password = prompt('Introduce la contraseña de ADMIN para confirmar:');
+      if(!password) return;
+
       const ids = Array.from(selected).map(cb => cb.value);
       
       // Eliminar uno a uno
       let deleted = 0;
+      let failed = false;
       ids.forEach(id => {
+        const formData = new FormData();
+        formData.append('admin_password', password);
+
         fetch(`/usuarios_gtd_sgpmr/${id}/eliminar`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
+          body: formData
+        }).then(res => {
+          if(res.ok) {
+            deleted++;
+            // Eliminar la fila de la tabla
+            const row = document.querySelector(`input[value="${id}"].row-select-usuarios`).closest('tr');
+            if(row) row.remove();
+          } else {
+            failed = true;
           }
-        }).then(() => {
-          deleted++;
-          // Eliminar la fila de la tabla
-          document.querySelector(`input[value="${id}"].row-select-usuarios`).closest('tr').remove();
           
-          if(deleted === ids.length){
-            alert('Usuarios eliminados correctamente');
+          if(deleted + (failed ? 1 : 0) === ids.length){
+            if(failed && deleted === 0) {
+              alert('Error: Contraseña de ADMIN incorrecta.');
+            } else {
+              alert('Proceso finalizado. Usuarios eliminados: ' + deleted);
+            }
             location.reload();
           }
         });

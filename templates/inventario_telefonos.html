@@ -27,7 +27,7 @@
       </div>
     </header>
 
-    <main class="container" style="flex-direction: column; height: auto; padding: 24px;">
+    <main class="container" style="display: block; height: auto; padding: 24px;">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
           <script>window.server_messages = {{ messages | tojson }};</script>
@@ -51,9 +51,11 @@
         </div>
       </div>
 
-      <div style="margin-top:12px">
-        <button id="delete-selected-btn" type="button" class="btn-secondary btn-small btn-danger">Borrar seleccionados</button>
-      </div>
+      {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
+        <div style="margin-top:12px; margin-block-end: 12px;">
+          <button id="delete-selected-btn" class="btn-secondary" style="background-color: #dc3545; color: white; border-color: #dc3545;">Eliminar selección</button>
+        </div>
+      {% endif %}
 
       <div class="table-container">
         <table>
@@ -78,12 +80,13 @@
                 <td>{{ telefono['telefono_asociado'] or '-' }}</td>
                 <td>{{ telefono['fecha_creacion'][:10] if telefono['fecha_creacion'] else '-' }}</td>
                 <td>
+                  {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
                   <div class="actions">
                     <a href="/inventario_telefonos/{{ telefono['id'] }}/editar" class="btn-secondary btn-small">Editar</a>
-                    <form method="post" action="/inventario_telefonos/{{ telefono['id'] }}/eliminar" style="display:inline;" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este teléfono?');">
-                      <button type="submit" class="btn-secondary btn-small btn-danger">Eliminar</button>
-                    </form>
                   </div>
+                  {% else %}
+                    -
+                  {% endif %}
                 </td>
               </tr>
             {% else %}

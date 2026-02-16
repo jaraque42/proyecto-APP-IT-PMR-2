@@ -607,6 +607,25 @@ def logout():
     flash('Sesión cerrada correctamente', 'success')
     return redirect(url_for('login'))
 
+@app.route('/verificar_password_borrado', methods=['POST'])
+@login_required
+def verificar_password_borrado():
+    data = request.get_json()
+    password = data.get('password')
+    
+    if not password:
+        return {'success': False, 'message': 'Contraseña requerida'}, 400
+        
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute('SELECT password FROM usuarios WHERE id = ?', (current_user.id,))
+    row = cursor.fetchone()
+    
+    if row and check_password_hash(row[0], password):
+        return {'success': True}
+    else:
+        return {'success': False, 'message': 'Contraseña incorrecta'}
+
 @app.route('/administracion')
 @require_permission('administracion')
 def administracion():
@@ -1765,9 +1784,25 @@ def editar_usuario_gtd_sgpmr(usuario_id):
     
     return render_template('editar_usuario_gtd_sgpmr.html', usuario=usuario)
 
+def check_admin_password(password):
+    if not password:
+        return False
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute('SELECT password FROM usuarios WHERE username = "admin"')
+    row = cursor.fetchone()
+    if row and check_password_hash(row[0], password):
+        return True
+    return False
+
 @app.route('/usuarios_gtd_sgpmr/<int:usuario_id>/eliminar', methods=['POST'])
 @require_permission('registrar')
 def eliminar_usuario_gtd_sgpmr(usuario_id):
+    password = request.form.get('admin_password')
+    if not check_admin_password(password):
+        flash('Contraseña de administrador incorrecta', 'error')
+        return redirect(url_for('usuarios_gtd_sgpmr'))
+
     db = get_db()
     db.execute('DELETE FROM usuarios_gtd_sgpmr WHERE id = ?', (usuario_id,))
     db.commit()
@@ -1947,6 +1982,11 @@ def editar_inventario_telefonos(telefono_id):
 @app.route('/inventario_telefonos/<int:telefono_id>/eliminar', methods=['POST'])
 @require_permission('registrar')
 def eliminar_inventario_telefonos(telefono_id):
+    password = request.form.get('admin_password')
+    if not check_admin_password(password):
+        flash('Contraseña de administrador incorrecta', 'error')
+        return redirect(url_for('inventario_telefonos'))
+
     db = get_db()
     db.execute('DELETE FROM inventario_telefonos WHERE id = ?', (telefono_id,))
     db.commit()
@@ -1957,6 +1997,11 @@ def eliminar_inventario_telefonos(telefono_id):
 @require_permission('registrar')
 def delete_selected_inventario_telefonos():
     ids_param = request.form.get('ids', '').strip()
+    password = request.form.get('admin_password')
+    
+    if not check_admin_password(password):
+        flash('Contraseña de administrador incorrecta', 'error')
+        return redirect(url_for('inventario_telefonos'))
 
     if ids_param:
         id_list = [int(i) for i in ids_param.split(',') if i.strip().isdigit()]
