@@ -61,7 +61,8 @@
             <th>Usuario</th>
             <th>IMEI</th>
             <th>Telefono</th>
-            <th>Notas de Telefono</th>
+            <th>Email</th>
+            <th>Firma</th>
             <th>Fecha (UTC)</th>
             {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
             <th>Acciones</th>
@@ -76,7 +77,8 @@
             <td>{{ r['usuario'] }}</td>
             <td>{{ r['imei'] }}</td>
             <td>{{ r['telefono'] }}</td>
-            <td>{{ r['notas_telefono'] }}</td>
+            <td>{{ r['email_usuario'] or '-' }}</td>
+            <td>{% if r['codigo_validacion'] %}<span class="badge-success">Código: {{ r['codigo_validacion'] }}</span>{% else %}<span class="badge-error">Sin firma</span>{% endif %}</td>
             <td>{{ r['timestamp'] }}</td>
             {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
             <td><a href="/registro/{{ r['id'] }}/editar" class="btn-secondary btn-small">Editar</a></td>

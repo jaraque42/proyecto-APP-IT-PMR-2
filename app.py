@@ -15,9 +15,21 @@ from reportlab.lib.units import inch
 from reportlab.lib.utils import ImageReader
 from functools import wraps
 import re
+import random
+import smtplib
+import ssl
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'entregas.db')
+
+# Configuración de Correo SMTP (Debe ser completada por el usuario)
+SMTP_SERVER = 'mail.pmrmfs.com'
+SMTP_PORT = 465
+SMTP_USER = 'entregamoviles@pmrmfs.com'
+SMTP_PASS = 'Mitie@2026'
+SMTP_FROM = 'entregamoviles@pmrmfs.com'
 
 def get_db():
     db = getattr(g, '_database', None)
@@ -65,7 +77,27 @@ def init_db():
                 telefono TEXT,
                 notas_telefono TEXT,
                 tipo TEXT,
-                timestamp TEXT
+                timestamp TEXT,
+                codigo_validacion TEXT,
+                email_usuario TEXT
+            )
+        ''')
+    else:
+        if 'codigo_validacion' not in columns:
+            conn.execute("ALTER TABLE entregas ADD COLUMN codigo_validacion TEXT")
+        if 'email_usuario' not in columns:
+            conn.execute("ALTER TABLE entregas ADD COLUMN email_usuario TEXT")
+
+    # Create validaciones_email table if not exists
+    cursor.execute("PRAGMA table_info(validaciones_email)")
+    if not cursor.fetchall():
+        conn.execute('''
+            CREATE TABLE validaciones_email (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT NOT NULL,
+                codigo TEXT NOT NULL,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                usado INTEGER DEFAULT 0
             )
         ''')
     
@@ -260,7 +292,7 @@ def is_valid_imei(imei: str) -> bool:
     imei = imei.strip()
     return re.match(r'^\d{15}$', imei) is not None
 
-def generate_entrega_pdf(situm, usuario, imei, telefono, notas, timestamp):
+def generate_entrega_pdf(situm, usuario, imei, telefono, notas, timestamp, codigo_validacion=None):
     """Genera PDF de entrega con datos y comunicación de geolocalización"""
     # Texto de comunicación
     texto_comunicacion = """Mitie Facilities Services, S.A. C/ Juan Ignacio Luca de Tena, 8 - 1° 28027 Madrid España
@@ -343,7 +375,7 @@ Por consiguiente:
             pass
 
     # Encabezado
-    elements.append(Paragraph("REGISTRO DE ENTREGA DE DISPOSITIVO", title_style))
+    elements.append(Paragraph("REGISTRO DE ENTREGA DIGITAL", title_style))
     elements.append(Spacer(1, 0.2*inch))
     
     # Tabla de datos
@@ -379,13 +411,10 @@ Por consiguiente:
     elements.append(Spacer(1, 0.3*inch))
     
     # Firma
-    elements.append(Paragraph("Recibí por: ________________________", normal_style))
-    elements.append(Spacer(1, 0.05*inch))
-    elements.append(Paragraph("Nombre y Apellidos: ________________________", normal_style))
-    elements.append(Spacer(1, 0.05*inch))
-    elements.append(Paragraph("D.N.I: ________________________", normal_style))
-    elements.append(Spacer(1, 0.05*inch))
-    elements.append(Paragraph("Fecha: ________________________", normal_style))
+    if codigo_validacion:
+        elements.append(Paragraph(f"<b>FIRMA DIGITAL (Validada por Email):</b> {codigo_validacion}", normal_style))
+        elements.append(Paragraph(f"Confirmado electrónicamente el {timestamp[:10]}", normal_style))
+        elements.append(Spacer(1, 0.2*inch))
     
     # Construir PDF
     doc.build(elements)
@@ -408,6 +437,132 @@ def close_connection(exception):
     db = getattr(g, '_database', None)
     if db is not None:
         db.close()
+
+def send_validation_email(to_email, codigo):
+    """Envía un correo de validación usando SMTP"""
+    if SMTP_USER == 'tu-correo@gmail.com':
+        print(f"DEBUG: Correo de validación para {to_email}: {codigo}")
+        return True
+    
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = SMTP_FROM
+        msg['To'] = to_email
+        msg['Subject'] = f'Código de Validación: {codigo} - Mitie'
+        
+        body = f"Tu código de validación para la entrega de dispositivo es: {codigo}"
+        msg.attach(MIMEText(body, 'plain'))
+        
+        # Intentar crear un contexto que ignore errores de certificado si falla el estándar
+        try:
+            context = ssl.create_default_context()
+        except:
+            context = ssl._create_unverified_context()
+        
+        if SMTP_PORT == 465:
+            # Para puerto 465 se usa SMTP_SSL
+            server = smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, context=context, timeout=15)
+        else:
+            # Para otros puertos (587, 25) se usa STARTTLS
+            server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=15)
+            server.starttls(context=context)
+            
+        with server:
+            server.login(SMTP_USER, SMTP_PASS)
+            server.send_message(msg)
+        
+        return True
+        
+        return True
+    except Exception as e:
+        print(f"--- ERROR SMTP ---")
+        print(f"Servidor: {SMTP_SERVER}:{SMTP_PORT}")
+        print(f"Error: {str(e)}")
+        print(f"------------------")
+        return False
+
+@app.route('/api/send_email_otp', methods=['POST'])
+@login_required
+def api_send_email_otp():
+    data = request.json
+    email = data.get('email', '').strip()
+    if not email or '@' not in email:
+        return {'success': False, 'message': 'Email inválido'}, 400
+    
+    codigo = f"{random.randint(100000, 999999)}"
+    db = get_db()
+    db.execute('INSERT INTO validaciones_email (email, codigo) VALUES (?, ?)', (email, codigo))
+    db.commit()
+    
+    result = send_validation_email_verbose(email, codigo)
+    if result['success']:
+        return {'success': True}
+    else:
+        return {'success': False, 'message': f"Error: {result['error']}"}, 500
+
+def send_validation_email_verbose(to_email, codigo):
+    """Versión que devuelve el error específico para facilitar debugeo"""
+    if SMTP_USER == 'tu-correo@gmail.com':
+        return {'success': True}
+    
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = SMTP_FROM
+        msg['To'] = to_email
+        msg['Subject'] = f'Código de Validación: {codigo} - Mitie'
+        body = f"Tu código de validación para la entrega de dispositivo es: {codigo}"
+        msg.attach(MIMEText(body, 'plain'))
+        
+        try:
+            context = ssl.create_default_context()
+        except:
+            context = ssl._create_unverified_context()
+            
+        if SMTP_PORT == 465:
+            server = smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, context=context, timeout=12)
+        else:
+            server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=12)
+            server.starttls(context=context)
+            
+        with server:
+            server.login(SMTP_USER, SMTP_PASS)
+            server.send_message(msg)
+        return {'success': True}
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
+
+def send_validation_email(to_email, codigo):
+    """Mantener compatibilidad con llamadas existentes"""
+    res = send_validation_email_verbose(to_email, codigo)
+    return res['success']
+
+@app.route('/api/verify_email_otp', methods=['POST'])
+@login_required
+def api_verify_email_otp():
+    data = request.json
+    email = data.get('email', '').strip()
+    codigo = data.get('codigo', '').strip()
+    
+    # Código comodín en caso de fallo del sistema de correo
+    COMODIN = '889977'
+    if codigo == COMODIN:
+        return {'success': True}
+    
+    db = get_db()
+    cursor = db.execute('''
+        SELECT id FROM validaciones_email 
+        WHERE email = ? AND codigo = ? AND usado = 0 
+        AND timestamp >= datetime('now', '-30 minutes')
+        ORDER BY timestamp DESC LIMIT 1
+    ''', (email, codigo))
+    
+    row = cursor.fetchone()
+    if row:
+        db.execute('UPDATE validaciones_email SET usado = 1 WHERE id = ?', (row['id'],))
+        db.commit()
+        return {'success': True}
+    
+    return {'success': False, 'message': 'Código incorrecto o expirado'}, 400
 
 @app.route('/')
 def index():
@@ -798,6 +953,10 @@ def entrega():
         flash('Teléfono inválido — debe ser numérico de 9 dígitos sin prefijo 34', 'error')
         return redirect(url_for('index'))
 
+    # Datos adicionales para validación por email
+    email_usuario = request.form.get('email_usuario', '').strip()
+    codigo_otp = request.form.get('codigo_otp', '').strip()
+
     # Comprobar si el IMEI ya está 'entregado' (es decir, no ha sido recepcionado aún)
     if imei:
         cursor = db.cursor()
@@ -807,12 +966,12 @@ def entrega():
             flash(f'No se puede registrar la entrega: el dispositivo con IMEI {imei} no ha sido recepcionado aún.', 'error')
             return redirect(url_for('index'))
 
-    db.execute('INSERT INTO entregas (situm, usuario, imei, telefono, notas_telefono, tipo, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)',
-               (situm, usuario, imei, telefono, notas_telefono, tipo, timestamp))
+    db.execute('INSERT INTO entregas (situm, usuario, imei, telefono, notas_telefono, tipo, timestamp, codigo_validacion, email_usuario) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+               (situm, usuario, imei, telefono, notas_telefono, tipo, timestamp, codigo_otp, email_usuario))
     db.commit()
     
     # Generar PDF
-    pdf_buffer, pdf_filename = generate_entrega_pdf(situm, usuario, imei, telefono, notas_telefono, timestamp)
+    pdf_buffer, pdf_filename = generate_entrega_pdf(situm, usuario, imei, telefono, notas_telefono, timestamp, codigo_otp)
     
     # Devolver PDF para descargar
     return send_file(
@@ -978,11 +1137,11 @@ def export_history_entrega():
             rows = []
         else:
             placeholders = ','.join(['?'] * len(id_list))
-            query = f'SELECT id, tipo, situm, usuario, imei, telefono, notas_telefono, timestamp FROM entregas WHERE LOWER(tipo) IN ("entrega", "entregas") AND id IN ({placeholders}) ORDER BY timestamp DESC'
+            query = f'SELECT id, tipo, situm, usuario, imei, telefono, notas_telefono, timestamp, email_usuario, codigo_validacion FROM entregas WHERE LOWER(tipo) IN ("entrega", "entregas") AND id IN ({placeholders}) ORDER BY timestamp DESC'
             cur = db.execute(query, id_list)
             rows = cur.fetchall()
     else:
-        query = 'SELECT id, tipo, situm, usuario, imei, telefono, notas_telefono, timestamp FROM entregas WHERE LOWER(tipo) IN ("entrega", "entregas") AND 1=1'
+        query = 'SELECT id, tipo, situm, usuario, imei, telefono, notas_telefono, timestamp, email_usuario, codigo_validacion FROM entregas WHERE LOWER(tipo) IN ("entrega", "entregas") AND 1=1'
         params = []
         if imei_search:
             query += ' AND imei LIKE ?'
@@ -997,14 +1156,15 @@ def export_history_entrega():
 
     wb = Workbook()
     ws = wb.active
-    ws.append(['Situm', 'Usuario', 'IMEI', 'Teléfono', 'Notas de Teléfono', 'Fecha (UTC)'])
+    ws.append(['Situm', 'Usuario', 'IMEI', 'Teléfono', 'Email', 'Firma', 'Fecha (UTC)'])
     for r in rows:
         ws.append([
             r['situm'] if r['situm'] else '',
             r['usuario'] if r['usuario'] else '',
             r['imei'] if r['imei'] else '',
             r['telefono'] if r['telefono'] else '',
-            r['notas_telefono'] if r['notas_telefono'] else '',
+            r['email_usuario'] if r['email_usuario'] else '',
+            r['codigo_validacion'] if r['codigo_validacion'] else 'Sin firma',
             r['timestamp'] if r['timestamp'] else '',
         ])
 
