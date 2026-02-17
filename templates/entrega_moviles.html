@@ -80,21 +80,33 @@
         fetch('/api/send_email_otp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
           body: JSON.stringify({ email: email })
         })
-        .then(response => response.json())
+        .then(response => {
+          // Si la respuesta es un redirect al login (sesión expirada)
+          if (response.redirected || response.url.includes('/login')) {
+            throw new Error('Sesión expirada. Recarga la página e inicia sesión de nuevo.');
+          }
+          // Intentar parsear JSON; si falla, leer como texto para mostrar el error
+          const ct = response.headers.get('content-type') || '';
+          if (!ct.includes('application/json')) {
+            throw new Error('Respuesta inesperada del servidor. Recarga la página.');
+          }
+          return response.json();
+        })
         .then(data => {
           if (data.success) {
             document.getElementById('initialActions').style.display = 'none';
             document.getElementById('otpSection').style.display = 'block';
             alert("Código de confirmación enviado al correo del usuario.");
           } else {
-            alert("Error: " + data.message);
+            alert("Error: " + (data.message || 'Error desconocido'));
             cancelVerification();
           }
         })
         .catch(err => {
-          alert("Error de conexión al enviar el código.");
+          alert(err.message || "Error de conexión al enviar el código.");
           cancelVerification();
         });
       }
@@ -111,9 +123,19 @@
         fetch('/api/verify_email_otp', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
           body: JSON.stringify({ email: email, codigo: codigo })
         })
-        .then(response => response.json())
+        .then(response => {
+          if (response.redirected || response.url.includes('/login')) {
+            throw new Error('Sesión expirada. Recarga la página e inicia sesión de nuevo.');
+          }
+          const ct = response.headers.get('content-type') || '';
+          if (!ct.includes('application/json')) {
+            throw new Error('Respuesta inesperada del servidor. Recarga la página.');
+          }
+          return response.json();
+        })
         .then(data => {
           if (data.success) {
             document.getElementById('codigo_otp').value = codigo;
@@ -122,7 +144,7 @@
             alert(data.message || "Código incorrecto o expirado.");
           }
         })
-        .catch(err => alert("Error de conexión al verificar el código."));
+        .catch(err => alert(err.message || "Error de conexión al verificar el código."));
       }
 
       function cancelVerification() {

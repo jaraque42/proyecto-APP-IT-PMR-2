@@ -12,3 +12,25 @@ env/
 node_modules/
 *.db
 *.sqlite3
+
+# Credenciales — nunca copiar al contenedor
+.env
+.env.local
+.env.example
+
+# Archivos de test y temporales
+cookies*.txt
+admin_cookies.txt
+user_cookies*.txt
+tmp_*.html
+
+# Scripts de desarrollo
+scripts/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+venv/
+.venv/
+
+# Entorno (NUNCA subir credenciales al repositorio)
+.env
+.env.local
+
+# Base de datos local
+entregas.db
+
+# PDFs generados
+pdfs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Archivos temporales y cookies de test
+cookies*.txt
+admin_cookies.txt
+user_cookies*.txt
+tmp_*.html
