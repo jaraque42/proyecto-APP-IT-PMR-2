@@ -126,13 +126,23 @@ def import_computers():
 
     inserted = 0
     db = get_db()
+    # Tipos de operación válidos
+    _TIPOS_VALIDOS = {'entrega', 'recepción', 'recepcion', 'incidencia'}
     for r in rows:
         proyecto = get_value(r, ['proyecto', 'PROYECTO']) or 'Mitie'
         hostname = get_value(r, ['hostname', 'HOSTNAME', 'equipo'])
         numero_serie = get_value(r, ['numero_serie', 'serial', 'sn', 'SN'])
         apellidos_nombre = get_value(r, ['apellidos_nombre', 'persona', 'usuario_equipo'])
         notas = get_value(r, ['notas', 'observaciones'])
-        tipo = get_value(r, ['tipo', 'TIPO']) or 'Entrega'
+        tipo_raw = get_value(r, ['tipo', 'TIPO']) or 'Entrega'
+        # Normalizar tipo: si no es un tipo de operación válido, usar 'Entrega'
+        tipo = tipo_raw.strip()
+        if tipo.lower() not in _TIPOS_VALIDOS:
+            tipo = 'Entrega'
+        else:
+            # Normalizar la capitalización
+            tipo_map = {'entrega': 'Entrega', 'recepción': 'Recepción', 'recepcion': 'Recepción', 'incidencia': 'Incidencia'}
+            tipo = tipo_map.get(tipo.lower(), 'Entrega')
 
         if not hostname:
             errors.append('Fila sin hostname omitida.')
