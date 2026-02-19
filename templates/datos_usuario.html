@@ -60,6 +60,7 @@
               <th>Teléfono Personal</th>
               <th>Email Personal</th>
               <th>Email Corp</th>
+              <th>Notas</th>
               <th>Fecha Creación</th>
               <th>Acciones</th>
             </tr>
@@ -73,6 +74,7 @@
                 <td>{{ usuario['telefono_personal'] or '-' }}</td>
                 <td>{{ usuario['email_personal'] or '-' }}</td>
                 <td>{{ usuario['email_corp'] or '-' }}</td>
+                <td>{{ usuario['notas'] or '-' }}</td>
                 <td>{{ usuario['fecha_creacion'][:10] if usuario['fecha_creacion'] else '-' }}</td>
                 <td>
                   {% if current_user.is_authenticated and current_user.tiene_permiso('administracion') %}
@@ -86,7 +88,7 @@
               </tr>
             {% else %}
               <tr>
-                <td colspan="8" style="text-align: center; color: #999;">No hay registros</td>
+                <td colspan="9" style="text-align: center; color: #999;">No hay registros</td>
               </tr>
             {% endfor %}
           </tbody>

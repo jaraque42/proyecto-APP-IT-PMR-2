@@ -66,6 +66,10 @@
               <label>Email Corporativo</label>
               <input type="email" name="email_corp" value="{{ usuario['email_corp'] or '' }}" placeholder="usuario@empresa.com">
             </div>
+            <div class="form-group">
+              <label>Notas</label>
+              <input type="text" name="notas" value="{{ usuario['notas'] or '' }}" placeholder="Observaciones (opcional)">
+            </div>
             <div class="form-actions">
               <button type="submit" class="btn btn-secondary">Guardar Cambios</button>
               <a href="/datos_usuario" class="btn btn-cancel">Cancelar</a>

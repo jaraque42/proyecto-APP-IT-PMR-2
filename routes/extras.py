@@ -331,6 +331,7 @@ def crear_datos_usuario():
         telefono_personal = request.form.get('telefono_personal', '').strip()
         email_personal = request.form.get('email_personal', '').strip()
         email_corp = request.form.get('email_corp', '').strip()
+        notas = request.form.get('notas', '').strip()
 
         if not dni or not apellidos_nombre:
             flash('DNI y Apellidos y Nombre son campos requeridos', 'error')
@@ -339,10 +340,10 @@ def crear_datos_usuario():
         db = get_db()
         try:
             db.execute('''
-                INSERT INTO datos_usuario (dni, apellidos_nombre, telefono_personal, email_personal, email_corp, fecha_creacion)
-                VALUES (?,?,?,?,?,?)
+                INSERT INTO datos_usuario (dni, apellidos_nombre, telefono_personal, email_personal, email_corp, notas, fecha_creacion)
+                VALUES (?,?,?,?,?,?,?)
             ''', (dni, apellidos_nombre, telefono_personal or None,
-                  email_personal or None, email_corp or None, datetime.utcnow().isoformat()))
+                  email_personal or None, email_corp or None, notas or None, datetime.utcnow().isoformat()))
             db.commit()
             flash('Datos de usuario creados correctamente', 'success')
             return redirect(url_for('extras.datos_usuario'))
@@ -368,6 +369,7 @@ def editar_datos_usuario(usuario_id):
         telefono_personal = request.form.get('telefono_personal', '').strip()
         email_personal = request.form.get('email_personal', '').strip()
         email_corp = request.form.get('email_corp', '').strip()
+        notas = request.form.get('notas', '').strip()
 
         if not dni or not apellidos_nombre:
             flash('DNI y Apellidos y Nombre son campos requeridos', 'error')
@@ -375,10 +377,10 @@ def editar_datos_usuario(usuario_id):
 
         try:
             db.execute('''
-                UPDATE datos_usuario SET dni=?, apellidos_nombre=?, telefono_personal=?, email_personal=?, email_corp=?
+                UPDATE datos_usuario SET dni=?, apellidos_nombre=?, telefono_personal=?, email_personal=?, email_corp=?, notas=?
                 WHERE id=?
             ''', (dni, apellidos_nombre, telefono_personal or None,
-                  email_personal or None, email_corp or None, usuario_id))
+                  email_personal or None, email_corp or None, notas or None, usuario_id))
             db.commit()
             flash('Datos de usuario actualizados correctamente', 'success')
             return redirect(url_for('extras.datos_usuario'))
@@ -450,14 +452,15 @@ def importar_datos_usuario():
                 errors.append(f"Fila {idx}: DNI y Apellidos y Nombre son requeridos")
                 continue
             db.execute('''
-                INSERT INTO datos_usuario (dni, apellidos_nombre, telefono_personal, email_personal, email_corp, fecha_creacion)
-                VALUES (?,?,?,?,?,?)
+                INSERT INTO datos_usuario (dni, apellidos_nombre, telefono_personal, email_personal, email_corp, notas, fecha_creacion)
+                VALUES (?,?,?,?,?,?,?)
             ''', (
                 dni,
                 apellidos_nombre,
                 str(row.get('telefono_personal') or row.get('telefono') or '').strip() or None,
                 str(row.get('email_personal') or '').strip() or None,
                 str(row.get('email_corp') or row.get('email_corporativo') or '').strip() or None,
+                str(row.get('notas') or row.get('observaciones') or '').strip() or None,
                 datetime.utcnow().isoformat(),
             ))
             inserted += 1

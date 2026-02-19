@@ -187,7 +187,8 @@ def init_db():
 
     # --- datos_usuario ---
     cursor.execute("PRAGMA table_info(datos_usuario)")
-    if not cursor.fetchall():
+    datos_cols = [c[1] for c in cursor.fetchall()]
+    if not datos_cols:
         conn.execute('''
             CREATE TABLE datos_usuario (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -196,9 +197,13 @@ def init_db():
                 telefono_personal TEXT,
                 email_personal TEXT,
                 email_corp TEXT,
+                notas TEXT,
                 fecha_creacion TEXT
             )
         ''')
+    else:
+        if 'notas' not in datos_cols:
+            conn.execute("ALTER TABLE datos_usuario ADD COLUMN notas TEXT")
 
     # --- Índices para consultas frecuentes ---
     conn.execute('CREATE INDEX IF NOT EXISTS idx_entregas_imei ON entregas(imei)')
