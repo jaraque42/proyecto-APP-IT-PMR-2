@@ -765,6 +765,91 @@ document.addEventListener('DOMContentLoaded', function(){
   }
 });
 
+// Funcionalidad para la página Datos de Usuario
+document.addEventListener('DOMContentLoaded', function(){
+  // Filtros combinados: DNI + Apellidos y Nombre
+  const filterDNI = document.getElementById('filter-datos-dni');
+  const filterNombre = document.getElementById('filter-datos-nombre');
+
+  function applyDatosUsuarioFilters(){
+    const dniValue = (filterDNI ? filterDNI.value : '').toLowerCase().trim();
+    const nombreValue = (filterNombre ? filterNombre.value : '').toLowerCase().trim();
+    const tableRows = document.querySelectorAll('table tbody tr');
+
+    tableRows.forEach(row => {
+      if(row.querySelector('td[colspan]')) return;
+      const dniCell = row.querySelector('td:nth-child(2)');
+      const nombreCell = row.querySelector('td:nth-child(3)');
+      const dniText = dniCell ? dniCell.textContent.toLowerCase().trim() : '';
+      const nombreText = nombreCell ? nombreCell.textContent.toLowerCase().trim() : '';
+
+      const matchDNI = dniValue === '' || dniText.includes(dniValue);
+      const matchNombre = nombreValue === '' || nombreText.includes(nombreValue);
+
+      row.style.display = (matchDNI && matchNombre) ? '' : 'none';
+    });
+  }
+
+  if(filterDNI) filterDNI.addEventListener('input', applyDatosUsuarioFilters);
+  if(filterNombre) filterNombre.addEventListener('input', applyDatosUsuarioFilters);
+
+  // Select all checkbox
+  const selectAllDatos = document.getElementById('select-all-datos-usuario-checkbox');
+  if(selectAllDatos){
+    selectAllDatos.addEventListener('change', function(){
+      const checked = this.checked;
+      document.querySelectorAll('.row-select-datos-usuario').forEach(cb => { cb.checked = checked; });
+    });
+  }
+
+  // Select all button
+  const selectAllDatosBtn = document.getElementById('select-all-datos-usuario');
+  if(selectAllDatosBtn){
+    selectAllDatosBtn.addEventListener('click', function(){
+      document.querySelectorAll('.row-select-datos-usuario').forEach(cb => { cb.checked = true; });
+      if(selectAllDatos) selectAllDatos.checked = true;
+    });
+  }
+
+  // Deselect all button
+  const deselectAllDatosBtn = document.getElementById('deselect-all-datos-usuario');
+  if(deselectAllDatosBtn){
+    deselectAllDatosBtn.addEventListener('click', function(){
+      document.querySelectorAll('.row-select-datos-usuario').forEach(cb => { cb.checked = false; });
+      if(selectAllDatos) selectAllDatos.checked = false;
+    });
+  }
+
+  // Delete selected datos de usuario
+  const deleteDatosBtn = document.getElementById('delete-selected-datos-usuario-btn');
+  if(deleteDatosBtn){
+    deleteDatosBtn.addEventListener('click', function(){
+      const selected = document.querySelectorAll('.row-select-datos-usuario:checked');
+      if(selected.length === 0){
+        alert('Por favor selecciona al menos un registro');
+        return;
+      }
+      if(!confirm('¿Estás seguro de que quieres eliminar ' + selected.length + ' registro(s)? Esta acción no se puede deshacer.')){
+        return;
+      }
+      const password = prompt('Introduce la contraseña de ADMIN para confirmar:');
+      if(!password) return;
+
+      const ids = Array.from(selected).map(cb => cb.value).join(',');
+      const formData = new FormData();
+      formData.append('ids', ids);
+      formData.append('admin_password', password);
+
+      fetch('/datos_usuario/delete-selected', {
+        method: 'POST',
+        body: formData
+      }).then(res => {
+        location.reload();
+      });
+    });
+  }
+});
+
 // Dropdown menu toggle function
 function toggleDropdown(e){
   e.preventDefault();

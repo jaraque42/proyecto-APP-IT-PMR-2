@@ -1,4 +1,4 @@
-"""Blueprint de extras: Usuarios GTD/SGPMR + Inventario de Teléfonos."""
+"""Blueprint de extras: Usuarios GTD/SGPMR + Inventario de Teléfonos + Datos de Usuario."""
 
 import sqlite3
 from datetime import datetime
@@ -308,3 +308,165 @@ def importar_inventario_telefonos():
     for err in errors[:10]:
         flash(err, 'error')
     return redirect(url_for('extras.inventario_telefonos'))
+
+
+# ===================================================================
+# Datos de Usuario
+# ===================================================================
+
+@extras_bp.route('/datos_usuario')
+@require_permission('registrar')
+def datos_usuario():
+    db = get_db()
+    usuarios = db.execute('SELECT * FROM datos_usuario ORDER BY fecha_creacion DESC').fetchall()
+    return render_template('datos_usuario.html', usuarios=usuarios)
+
+
+@extras_bp.route('/datos_usuario/crear', methods=['GET', 'POST'])
+@require_permission('registrar')
+def crear_datos_usuario():
+    if request.method == 'POST':
+        dni = request.form.get('dni', '').strip()
+        apellidos_nombre = request.form.get('apellidos_nombre', '').strip()
+        telefono_personal = request.form.get('telefono_personal', '').strip()
+        email_personal = request.form.get('email_personal', '').strip()
+        email_corp = request.form.get('email_corp', '').strip()
+
+        if not dni or not apellidos_nombre:
+            flash('DNI y Apellidos y Nombre son campos requeridos', 'error')
+            return redirect(url_for('extras.crear_datos_usuario'))
+
+        db = get_db()
+        try:
+            db.execute('''
+                INSERT INTO datos_usuario (dni, apellidos_nombre, telefono_personal, email_personal, email_corp, fecha_creacion)
+                VALUES (?,?,?,?,?,?)
+            ''', (dni, apellidos_nombre, telefono_personal or None,
+                  email_personal or None, email_corp or None, datetime.utcnow().isoformat()))
+            db.commit()
+            flash('Datos de usuario creados correctamente', 'success')
+            return redirect(url_for('extras.datos_usuario'))
+        except sqlite3.IntegrityError as e:
+            flash(f'Error al crear datos de usuario: {e}', 'error')
+            return redirect(url_for('extras.crear_datos_usuario'))
+
+    return render_template('crear_datos_usuario.html')
+
+
+@extras_bp.route('/datos_usuario/<int:usuario_id>/editar', methods=['GET', 'POST'])
+@require_permission('registrar')
+def editar_datos_usuario(usuario_id):
+    db = get_db()
+    usuario = db.execute('SELECT * FROM datos_usuario WHERE id = ?', (usuario_id,)).fetchone()
+    if not usuario:
+        flash('Usuario no encontrado', 'error')
+        return redirect(url_for('extras.datos_usuario'))
+
+    if request.method == 'POST':
+        dni = request.form.get('dni', '').strip()
+        apellidos_nombre = request.form.get('apellidos_nombre', '').strip()
+        telefono_personal = request.form.get('telefono_personal', '').strip()
+        email_personal = request.form.get('email_personal', '').strip()
+        email_corp = request.form.get('email_corp', '').strip()
+
+        if not dni or not apellidos_nombre:
+            flash('DNI y Apellidos y Nombre son campos requeridos', 'error')
+            return redirect(url_for('extras.editar_datos_usuario', usuario_id=usuario_id))
+
+        try:
+            db.execute('''
+                UPDATE datos_usuario SET dni=?, apellidos_nombre=?, telefono_personal=?, email_personal=?, email_corp=?
+                WHERE id=?
+            ''', (dni, apellidos_nombre, telefono_personal or None,
+                  email_personal or None, email_corp or None, usuario_id))
+            db.commit()
+            flash('Datos de usuario actualizados correctamente', 'success')
+            return redirect(url_for('extras.datos_usuario'))
+        except sqlite3.IntegrityError as e:
+            flash(f'Error al actualizar datos de usuario: {e}', 'error')
+            return redirect(url_for('extras.editar_datos_usuario', usuario_id=usuario_id))
+
+    return render_template('editar_datos_usuario.html', usuario=usuario)
+
+
+@extras_bp.route('/datos_usuario/<int:usuario_id>/eliminar', methods=['POST'])
+@require_permission('registrar')
+def eliminar_datos_usuario(usuario_id):
+    password = request.form.get('admin_password')
+    if not check_admin_password(password):
+        flash('Contraseña de administrador incorrecta', 'error')
+        return redirect(url_for('extras.datos_usuario'))
+
+    db = get_db()
+    db.execute('DELETE FROM datos_usuario WHERE id = ?', (usuario_id,))
+    db.commit()
+    flash('Datos de usuario eliminados correctamente', 'success')
+    return redirect(url_for('extras.datos_usuario'))
+
+
+@extras_bp.route('/datos_usuario/delete-selected', methods=['POST'])
+@require_permission('registrar')
+def delete_selected_datos_usuario():
+    ids_param = request.form.get('ids', '').strip()
+    password = request.form.get('admin_password')
+
+    if not check_admin_password(password):
+        flash('Contraseña de administrador incorrecta', 'error')
+        return redirect(url_for('extras.datos_usuario'))
+
+    if ids_param:
+        id_list = [int(i) for i in ids_param.split(',') if i.strip().isdigit()]
+        if id_list:
+            db = get_db()
+            ph = ','.join(['?'] * len(id_list))
+            db.execute(f'DELETE FROM datos_usuario WHERE id IN ({ph})', id_list)
+            db.commit()
+            flash('Registros eliminados correctamente', 'success')
+
+    return redirect(url_for('extras.datos_usuario'))
+
+
+@extras_bp.route('/datos_usuario/importar', methods=['GET', 'POST'])
+@require_permission('registrar')
+def importar_datos_usuario():
+    if request.method == 'GET':
+        return render_template('importar_datos_usuario.html')
+
+    archivo = request.files.get('archivo')
+    rows, file_errors = parse_import_file(archivo)
+    if file_errors and not rows:
+        for e in file_errors:
+            flash(e, 'error')
+        return redirect(url_for('extras.importar_datos_usuario'))
+
+    db = get_db()
+    inserted = 0
+    errors = list(file_errors)
+    for idx, row in enumerate(rows, 2):
+        try:
+            dni = str(row.get('dni') or '').strip()
+            apellidos_nombre = str(row.get('apellidos_nombre') or row.get('nombre') or '').strip()
+            if not dni or not apellidos_nombre:
+                errors.append(f"Fila {idx}: DNI y Apellidos y Nombre son requeridos")
+                continue
+            db.execute('''
+                INSERT INTO datos_usuario (dni, apellidos_nombre, telefono_personal, email_personal, email_corp, fecha_creacion)
+                VALUES (?,?,?,?,?,?)
+            ''', (
+                dni,
+                apellidos_nombre,
+                str(row.get('telefono_personal') or row.get('telefono') or '').strip() or None,
+                str(row.get('email_personal') or '').strip() or None,
+                str(row.get('email_corp') or row.get('email_corporativo') or '').strip() or None,
+                datetime.utcnow().isoformat(),
+            ))
+            inserted += 1
+        except sqlite3.IntegrityError as e:
+            errors.append(f"Fila {idx}: {e}")
+    db.commit()
+
+    flash(f'Se importaron {inserted} registros correctamente. Errores: {len(errors)}',
+          'success' if inserted else 'warning')
+    for err in errors[:10]:
+        flash(err, 'error')
+    return redirect(url_for('extras.datos_usuario'))

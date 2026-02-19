@@ -185,6 +185,21 @@ def init_db():
             )
         ''')
 
+    # --- datos_usuario ---
+    cursor.execute("PRAGMA table_info(datos_usuario)")
+    if not cursor.fetchall():
+        conn.execute('''
+            CREATE TABLE datos_usuario (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                dni TEXT NOT NULL,
+                apellidos_nombre TEXT NOT NULL,
+                telefono_personal TEXT,
+                email_personal TEXT,
+                email_corp TEXT,
+                fecha_creacion TEXT
+            )
+        ''')
+
     # --- Índices para consultas frecuentes ---
     conn.execute('CREATE INDEX IF NOT EXISTS idx_entregas_imei ON entregas(imei)')
     conn.execute('CREATE INDEX IF NOT EXISTS idx_entregas_tipo ON entregas(tipo)')

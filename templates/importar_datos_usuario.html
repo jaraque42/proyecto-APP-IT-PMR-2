@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Importar Datos de Usuario</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+    <div class="bg-logo" aria-hidden="true"></div>
+    <header class="topbar">
+      <h1><a href="/" style="display:inline-flex;align-items:center;text-decoration:none;color:inherit;"><img src="/static/mitie_logo.png" srcset="/static/mitie_logo@2x.png 2x" class="brand-logo" alt="Mitie" width="56" decoding="async"></a>Importar Datos de Usuario</h1>
+      <div style="display:flex;align-items:center;gap:12px">
+        {% if current_user.is_authenticated %}
+          <a class="user-badge" href="/perfil">Operador: {{ current_user.username }}</a>
+        {% endif %}
+        <div>
+          <a class="history-link" href="/datos_usuario">Volver</a>
+        </div>
+      </div>
+    </header>
+    <main class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <script>window.server_messages = {{ messages | tojson }};</script>
+        {% endif %}
+      {% endwith %}
+
+      <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+      <section class="card">
+        <h2>Subir CSV o XLSX</h2>
+        <p>El archivo debe tener encabezados como: <em>dni, apellidos_nombre, telefono_personal, email_personal, email_corp</em>.</p>
+        <form action="/datos_usuario/importar" method="post" enctype="multipart/form-data">
+          <label>Archivo<input type="file" name="archivo" accept=".csv,.xlsx" required></label>
+          <div class="actions"><button class="btn-secondary" type="submit">Importar</button></div>
+        </form>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
