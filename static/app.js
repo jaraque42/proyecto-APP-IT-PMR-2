@@ -518,29 +518,31 @@ document.addEventListener('click', function(e){
 
 // Funcionalidad para la página Usuarios GTD SGPMR
 document.addEventListener('DOMContentLoaded', function(){
-  // Filtro por Usuario SGPMR
-  const filterInput = document.getElementById('filter-usuario-sgpmr');
-  if(filterInput){
-    filterInput.addEventListener('input', function(){
-      const filterValue = this.value.toLowerCase().trim();
-      const tableRows = document.querySelectorAll('table tbody tr');
-      
-      tableRows.forEach(row => {
-        // Skip the "no hay usuarios" row
-        if(row.querySelector('td[colspan]')) return;
-        
-        const usuarioSGPMRCell = row.querySelector('td:nth-child(3)'); // Usuario SGPMR es la tercera columna
-        if(usuarioSGPMRCell){
-          const usuarioSGPMRValue = usuarioSGPMRCell.textContent.toLowerCase().trim();
-          if(filterValue === '' || usuarioSGPMRValue.includes(filterValue)){
-            row.style.display = '';
-          } else {
-            row.style.display = 'none';
-          }
-        }
-      });
+  // Filtros combinados: Usuario SGPMR + Nombre y Apellidos
+  const filterSGPMR = document.getElementById('filter-usuario-sgpmr');
+  const filterNombre = document.getElementById('filter-nombre-apellidos');
+
+  function applyUsuariosFilters(){
+    const sgpmrValue = (filterSGPMR ? filterSGPMR.value : '').toLowerCase().trim();
+    const nombreValue = (filterNombre ? filterNombre.value : '').toLowerCase().trim();
+    const tableRows = document.querySelectorAll('table tbody tr');
+
+    tableRows.forEach(row => {
+      if(row.querySelector('td[colspan]')) return;
+      const sgpmrCell = row.querySelector('td:nth-child(3)'); // Usuario SGPMR
+      const nombreCell = row.querySelector('td:nth-child(4)'); // Nombre y Apellidos
+      const sgpmrText = sgpmrCell ? sgpmrCell.textContent.toLowerCase().trim() : '';
+      const nombreText = nombreCell ? nombreCell.textContent.toLowerCase().trim() : '';
+
+      const matchSGPMR = sgpmrValue === '' || sgpmrText.includes(sgpmrValue);
+      const matchNombre = nombreValue === '' || nombreText.includes(nombreValue);
+
+      row.style.display = (matchSGPMR && matchNombre) ? '' : 'none';
     });
   }
+
+  if(filterSGPMR) filterSGPMR.addEventListener('input', applyUsuariosFilters);
+  if(filterNombre) filterNombre.addEventListener('input', applyUsuariosFilters);
 
   // Select all checkbox
   const selectAllUsuarios = document.getElementById('select-all-usuarios-checkbox');
