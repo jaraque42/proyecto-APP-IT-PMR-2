@@ -29,6 +29,10 @@ window.confirmAdminDelete = function(event, message) {
 document.addEventListener('submit', function(e){
   const form = e.target;
   if(form.tagName.toLowerCase() !== 'form') return;
+
+  // No validar formularios de búsqueda (method GET) — permiten búsquedas parciales
+  if(form.method.toLowerCase() === 'get') return;
+
   const imei = form.querySelector('[name=imei]');
   const usuario = form.querySelector('[name=usuario]');
   const telefono = form.querySelector('[name=telefono]');

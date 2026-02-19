@@ -98,6 +98,27 @@
           {% endfor %}
         </tbody>
       </table>
+
+      {% if total_pages > 1 %}
+      <nav class="pagination" style="margin-top:16px;display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;">
+        {% if page > 1 %}
+          <a href="?page={{ page - 1 }}&hostname={{ hostname_search }}&sn={{ sn_search }}&proyecto={{ proyecto_filter }}" class="btn-secondary btn-small">&laquo; Anterior</a>
+        {% endif %}
+        {% for p in range(1, total_pages + 1) %}
+          {% if p == page %}
+            <span style="font-weight:bold;padding:4px 10px;background:#e30613;color:#fff;border-radius:4px;">{{ p }}</span>
+          {% elif p <= 3 or p > total_pages - 3 or (p >= page - 2 and p <= page + 2) %}
+            <a href="?page={{ p }}&hostname={{ hostname_search }}&sn={{ sn_search }}&proyecto={{ proyecto_filter }}" class="btn-secondary btn-small">{{ p }}</a>
+          {% elif p == 4 or p == total_pages - 3 %}
+            <span>…</span>
+          {% endif %}
+        {% endfor %}
+        {% if page < total_pages %}
+          <a href="?page={{ page + 1 }}&hostname={{ hostname_search }}&sn={{ sn_search }}&proyecto={{ proyecto_filter }}" class="btn-secondary btn-small">Siguiente &raquo;</a>
+        {% endif %}
+        <span style="margin-left:12px;font-size:0.9em;color:#666;">Página {{ page }} de {{ total_pages }} ({{ total }} registros)</span>
+      </nav>
+      {% endif %}
     </main>
     <script src="/static/app.js"></script>
   </body>

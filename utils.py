@@ -346,11 +346,8 @@ def build_excel(headers, rows_data):
 # ---------------------------------------------------------------------------
 
 def verify_delete_password(password):
-    """Compara la contraseña proporcionada con DELETE_MASTER_PASSWORD."""
-    master = os.environ.get('DELETE_MASTER_PASSWORD', '')
-    if not master or password != master:
-        return False
-    return True
+    """Verifica la contraseña proporcionada contra la del usuario admin."""
+    return check_admin_password(password)
 
 
 def check_admin_password(password):

@@ -24,10 +24,10 @@ history_bp = Blueprint('history', __name__)
 def _search_params_moviles():
     """Extrae parámetros de búsqueda comunes para entregas/recepciones."""
     return {
-        'imei':         request.args.get('imei', '').strip(),
-        'usuario':      request.args.get('usuario', '').strip(),
-        'fecha_inicio': request.args.get('fecha_inicio', '').strip(),
-        'fecha_fin':    request.args.get('fecha_fin', '').strip(),
+        'imei_search':    request.args.get('imei', '').strip(),
+        'usuario_search': request.args.get('usuario', '').strip(),
+        'fecha_inicio':   request.args.get('fecha_inicio', '').strip(),
+        'fecha_fin':      request.args.get('fecha_fin', '').strip(),
     }
 
 
@@ -37,12 +37,12 @@ def _build_entregas_query(tipos, search):
     query = f'SELECT * FROM entregas WHERE LOWER(tipo) IN ({tipo_placeholders})'
     params = list(tipos)
 
-    if search['imei']:
+    if search['imei_search']:
         query += ' AND imei LIKE ?'
-        params.append(f"%{search['imei']}%")
-    if search['usuario']:
+        params.append(f"%{search['imei_search']}%")
+    if search['usuario_search']:
         query += ' AND usuario LIKE ?'
-        params.append(f"%{search['usuario']}%")
+        params.append(f"%{search['usuario_search']}%")
     if search['fecha_inicio']:
         query += ' AND timestamp >= ?'
         params.append(f"{search['fecha_inicio']}T00:00:00")

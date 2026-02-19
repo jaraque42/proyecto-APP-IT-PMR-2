@@ -39,6 +39,7 @@
           <label>Usuario: <input type="text" name="usuario" value="{{ usuario_search }}"></label>
           <label>Desde: <input type="date" name="fecha_inicio" value="{{ fecha_inicio }}"></label>
           <label>Hasta: <input type="date" name="fecha_fin" value="{{ fecha_fin }}"></label>
+          <button type="submit" class="btn-secondary btn-small">Buscar</button>
         </form>
         <div class="dropdown-menu">
           <button class="dropdown-toggle" onclick="toggleDropdown(event)">Herramientas ▼</button>
@@ -87,6 +88,27 @@
           {% endfor %}
         </tbody>
       </table>
+
+      {% if total_pages > 1 %}
+      <nav class="pagination" style="margin-top:16px;display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;">
+        {% if page > 1 %}
+          <a href="?page={{ page - 1 }}&imei={{ imei_search }}&usuario={{ usuario_search }}&fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}" class="btn-secondary btn-small">&laquo; Anterior</a>
+        {% endif %}
+        {% for p in range(1, total_pages + 1) %}
+          {% if p == page %}
+            <span style="font-weight:bold;padding:4px 10px;background:#e30613;color:#fff;border-radius:4px;">{{ p }}</span>
+          {% elif p <= 3 or p > total_pages - 3 or (p >= page - 2 and p <= page + 2) %}
+            <a href="?page={{ p }}&imei={{ imei_search }}&usuario={{ usuario_search }}&fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}" class="btn-secondary btn-small">{{ p }}</a>
+          {% elif p == 4 or p == total_pages - 3 %}
+            <span>…</span>
+          {% endif %}
+        {% endfor %}
+        {% if page < total_pages %}
+          <a href="?page={{ page + 1 }}&imei={{ imei_search }}&usuario={{ usuario_search }}&fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}" class="btn-secondary btn-small">Siguiente &raquo;</a>
+        {% endif %}
+        <span style="margin-left:12px;font-size:0.9em;color:#666;">Página {{ page }} de {{ total_pages }} ({{ total }} registros)</span>
+      </nav>
+      {% endif %}
     </main>
     <script src="/static/app.js"></script>
   </body>
