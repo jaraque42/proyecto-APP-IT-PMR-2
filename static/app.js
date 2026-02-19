@@ -767,31 +767,98 @@ document.addEventListener('DOMContentLoaded', function(){
 
 // Funcionalidad para la página Datos de Usuario
 document.addEventListener('DOMContentLoaded', function(){
-  // Filtros combinados: DNI + Apellidos y Nombre
+  // Filtros combinados: DNI + Apellidos y Nombre + Notas
   const filterDNI = document.getElementById('filter-datos-dni');
   const filterNombre = document.getElementById('filter-datos-nombre');
+  const filterNotas = document.getElementById('filter-datos-notas');
 
   function applyDatosUsuarioFilters(){
     const dniValue = (filterDNI ? filterDNI.value : '').toLowerCase().trim();
     const nombreValue = (filterNombre ? filterNombre.value : '').toLowerCase().trim();
+    const notasValue = (filterNotas ? filterNotas.value : '').toLowerCase().trim();
     const tableRows = document.querySelectorAll('table tbody tr');
 
     tableRows.forEach(row => {
       if(row.querySelector('td[colspan]')) return;
       const dniCell = row.querySelector('td:nth-child(2)');
       const nombreCell = row.querySelector('td:nth-child(3)');
+      const notasCell = row.querySelector('td:nth-child(7)');
       const dniText = dniCell ? dniCell.textContent.toLowerCase().trim() : '';
       const nombreText = nombreCell ? nombreCell.textContent.toLowerCase().trim() : '';
+      const notasText = notasCell ? notasCell.textContent.toLowerCase().trim() : '';
 
       const matchDNI = dniValue === '' || dniText.includes(dniValue);
       const matchNombre = nombreValue === '' || nombreText.includes(nombreValue);
+      const matchNotas = notasValue === '' || notasText.includes(notasValue);
 
-      row.style.display = (matchDNI && matchNombre) ? '' : 'none';
+      row.style.display = (matchDNI && matchNombre && matchNotas) ? '' : 'none';
     });
   }
 
   if(filterDNI) filterDNI.addEventListener('input', applyDatosUsuarioFilters);
   if(filterNombre) filterNombre.addEventListener('input', applyDatosUsuarioFilters);
+  if(filterNotas) filterNotas.addEventListener('input', applyDatosUsuarioFilters);
+
+  // ── Ordenación por columnas ──
+  (function(){
+    const sortableHeaders = document.querySelectorAll('th.sortable');
+    if(!sortableHeaders.length) return;
+
+    let currentSortCol = null;
+    let currentSortDir = 'asc';
+
+    sortableHeaders.forEach(function(th){
+      th.addEventListener('click', function(){
+        const colIndex = parseInt(th.getAttribute('data-col'));
+        const isDate = th.getAttribute('data-type') === 'date';
+
+        // Determinar dirección
+        if(currentSortCol === colIndex){
+          currentSortDir = currentSortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+          currentSortCol = colIndex;
+          currentSortDir = 'asc';
+        }
+
+        // Actualizar flechas
+        sortableHeaders.forEach(function(h){
+          var arrow = h.querySelector('.sort-arrow');
+          if(arrow) arrow.textContent = '';
+        });
+        var activeArrow = th.querySelector('.sort-arrow');
+        if(activeArrow) activeArrow.textContent = currentSortDir === 'asc' ? ' ▲' : ' ▼';
+
+        // Obtener filas y ordenar
+        var tbody = document.querySelector('table tbody');
+        if(!tbody) return;
+        var rows = Array.from(tbody.querySelectorAll('tr'));
+        // Excluir fila de "No hay registros"
+        var dataRows = rows.filter(function(r){ return !r.querySelector('td[colspan]'); });
+
+        dataRows.sort(function(a, b){
+          var cellA = a.querySelectorAll('td')[colIndex];
+          var cellB = b.querySelectorAll('td')[colIndex];
+          var textA = cellA ? cellA.textContent.trim().toLowerCase() : '';
+          var textB = cellB ? cellB.textContent.trim().toLowerCase() : '';
+
+          if(isDate){
+            // Parsear fecha dd/mm/yyyy o yyyy-mm-dd
+            var dA = textA === '-' ? 0 : new Date(textA.split('/').reverse().join('-')).getTime() || new Date(textA).getTime() || 0;
+            var dB = textB === '-' ? 0 : new Date(textB.split('/').reverse().join('-')).getTime() || new Date(textB).getTime() || 0;
+            return currentSortDir === 'asc' ? dA - dB : dB - dA;
+          }
+
+          if(textA === '-') textA = '';
+          if(textB === '-') textB = '';
+          var cmp = textA.localeCompare(textB, 'es', {numeric: true, sensitivity: 'base'});
+          return currentSortDir === 'asc' ? cmp : -cmp;
+        });
+
+        // Reinsertar filas ordenadas
+        dataRows.forEach(function(r){ tbody.appendChild(r); });
+      });
+    });
+  })();
 
   // Select all checkbox
   const selectAllDatos = document.getElementById('select-all-datos-usuario-checkbox');

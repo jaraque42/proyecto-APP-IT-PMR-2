@@ -35,6 +35,7 @@
         <div style="flex: 1;"></div>
         <input type="text" id="filter-datos-nombre" placeholder="Filtrar por Apellidos y Nombre..." style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
         <input type="text" id="filter-datos-dni" placeholder="Filtrar por DNI..." style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
+        <input type="text" id="filter-datos-notas" placeholder="Filtrar por Notas..." style="padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
         <div class="dropdown-menu">
           <button class="dropdown-toggle" onclick="toggleDropdown(event)">Herramientas ▼</button>
           <div class="dropdown-content">
@@ -55,13 +56,13 @@
           <thead>
             <tr>
               <th><input type="checkbox" id="select-all-datos-usuario-checkbox"></th>
-              <th>DNI</th>
-              <th>Apellidos y Nombre</th>
-              <th>Teléfono Personal</th>
-              <th>Email Personal</th>
-              <th>Email Corp</th>
-              <th>Notas</th>
-              <th>Fecha Creación</th>
+              <th class="sortable" data-col="1" style="cursor:pointer;user-select:none;">DNI <span class="sort-arrow"></span></th>
+              <th class="sortable" data-col="2" style="cursor:pointer;user-select:none;">Apellidos y Nombre <span class="sort-arrow"></span></th>
+              <th class="sortable" data-col="3" style="cursor:pointer;user-select:none;">Teléfono Personal <span class="sort-arrow"></span></th>
+              <th class="sortable" data-col="4" style="cursor:pointer;user-select:none;">Email Personal <span class="sort-arrow"></span></th>
+              <th class="sortable" data-col="5" style="cursor:pointer;user-select:none;">Email Corp <span class="sort-arrow"></span></th>
+              <th class="sortable" data-col="6" style="cursor:pointer;user-select:none;">Notas <span class="sort-arrow"></span></th>
+              <th class="sortable" data-col="7" data-type="date" style="cursor:pointer;user-select:none;">Fecha Creación <span class="sort-arrow"></span></th>
               <th>Acciones</th>
             </tr>
           </thead>
