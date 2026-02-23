@@ -29,8 +29,11 @@
 
       <section class="card">
         <h2>Subir CSV o XLSX para Computers</h2>
-        <p>El archivo puede tener encabezados como: <em>hostname, numero_serie, apellidos_nombre, notas, tipo, proyecto</em>. "Proyecto" por defecto es Mitie si no se especifica.</p>
-        <form action="/history_computers/import" method="post" enctype="multipart/form-data">
+        <p>El archivo puede tener encabezados como: <em>hostname, numero_serie (o S/N), apellidos_nombre, notas, tipo, proyecto</em>. "Proyecto" por defecto viene del filtro de la página anterior (Mitie si no se especifica).</p>
+        <form action="/history_computers/import{% if default_project %}?proyecto={{ default_project }}{% endif %}" method="post" enctype="multipart/form-data">
+          {% if default_project %}
+            <input type="hidden" name="proyecto_default" value="{{ default_project }}">
+          {% endif %}
           <label>Archivo<input type="file" name="file" accept=".csv,.xlsx" required></label>
           <div class="actions"><button class="btn-secondary" type="submit">Importar Equipos</button></div>
         </form>

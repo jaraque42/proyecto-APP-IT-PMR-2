@@ -45,7 +45,7 @@
         </form>
         <div class="search-actions">
           <a href="/history_computers/export?tipo={{ tipo_actual }}&hostname={{ hostname_search }}&sn={{ sn_search }}&proyecto={{ proyecto_filter }}" class="btn-secondary">📤 Exportar Excel</a>
-          <a href="/history_computers/import" class="btn-secondary">📥 Importar desde Excel</a>
+          <a href="/history_computers/import?proyecto={{ proyecto_filter }}" class="btn-secondary">📥 Importar desde Excel</a>
           <div class="dropdown-menu">
             <button class="dropdown-toggle" onclick="toggleDropdown(event)">Herramientas ▼</button>
             <div class="dropdown-content">

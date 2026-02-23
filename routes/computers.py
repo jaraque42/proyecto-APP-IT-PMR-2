@@ -114,24 +114,43 @@ def editar_computer(computer_id):
 @computers_bp.route('/history_computers/import', methods=['GET', 'POST'])
 @require_permission('registrar')
 def import_computers():
+    # Allow attaching a project filter in the query string so that importing
+    # from a filtered page (e.g. AENA) uses that as the default when the
+    # spreadsheet doesn't specify a project.
+    # default project may come from the query string on the GET request or be
+    # carried as a hidden field in the POST form.  This allows the project filter
+    # on the history page to propagate to the import routine.
+    default_proj = request.args.get('proyecto')
+    if request.method == 'POST':
+        # if form included a hidden field, use it when args are missing
+        default_proj = default_proj or request.form.get('proyecto_default')
+
     if request.method == 'GET':
-        return render_template('import_computers.html')
+        return render_template('import_computers.html', default_project=default_proj)
 
     file = request.files.get('file')
     rows, errors = parse_import_file(file)
     if errors and not rows:
         for e in errors:
             flash(e, 'error')
-        return redirect(url_for('computers.import_computers'))
+        # preserve the project parameter when redirecting back to the form
+        if default_proj:
+            return redirect(url_for('computers.import_computers', proyecto=default_proj))
+        else:
+            return redirect(url_for('computers.import_computers'))
 
     inserted = 0
     db = get_db()
     # Tipos de operación válidos
     _TIPOS_VALIDOS = {'entrega', 'recepción', 'recepcion', 'incidencia'}
+    proyecto_importado = default_proj
     for r in rows:
-        proyecto = get_value(r, ['proyecto', 'PROYECTO']) or 'Mitie'
+        proyecto = get_value(r, ['proyecto', 'PROYECTO']) or default_proj or 'Mitie'
+        if proyecto_importado is None:
+            proyecto_importado = proyecto
         hostname = get_value(r, ['hostname', 'HOSTNAME', 'equipo'])
-        numero_serie = get_value(r, ['numero_serie', 'serial', 'sn', 'SN'])
+        # accept common variations for serial number column, including "S/N"
+        numero_serie = get_value(r, ['numero_serie', 'serial', 'sn', 'SN', 's/n'])
         apellidos_nombre = get_value(r, ['apellidos_nombre', 'persona', 'usuario_equipo'])
         notas = get_value(r, ['notas', 'observaciones'])
         tipo_raw = get_value(r, ['tipo', 'TIPO']) or 'Entrega'
@@ -163,4 +182,8 @@ def import_computers():
     flash(f'Se insertaron {inserted} registros de computers.', 'success' if inserted else 'warning')
     for err in errors[:5]:
         flash(err, 'error')
-    return redirect(url_for('history.history_computers_entrega'))
+    # Redirigir al histórico con el filtro de proyecto correspondiente
+    if proyecto_importado:
+        return redirect(url_for('history.history_computers_entrega', proyecto=proyecto_importado))
+    else:
+        return redirect(url_for('history.history_computers_entrega'))
