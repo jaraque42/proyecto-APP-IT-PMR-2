@@ -111,6 +111,43 @@ def history_recepcion():
 # Histórico computers (genérico)
 # ===================================================================
 
+@history_bp.route('/history_recepcion/import', methods=['POST'])
+@require_permission('administracion')
+def import_history_recepcion():
+    file = request.files.get('file')
+    rows, errors = parse_import_file(file)
+
+    inserted = 0
+    if rows:
+        db = get_db()
+        for r in rows:
+            situm = get_value(r, ['situm', 'SITUM'])
+            usuario = get_value(r, ['usuario', 'user', 'nombre'])
+            imei = get_value(r, ['imei', 'IMEI'])
+            raw_tel = get_value(r, ['telefono', 'phone', 'telefono_movil']) or ''
+            telefono = format_phone(raw_tel)
+            if raw_tel and telefono is None:
+                errors.append(f'Fila con IMEI={imei}: teléfono inválido "{raw_tel}"')
+                continue
+            notas_telefono = get_value(r, ['notas_telefono', 'notas', 'notes', 'modelo', 'model'])
+            try:
+                db.execute(
+                    'INSERT INTO entregas (situm, usuario, imei, telefono, notas_telefono, tipo, timestamp) VALUES (?,?,?,?,?,?,?)',
+                    (situm, usuario, imei, telefono, notas_telefono, 'recepcion', datetime.utcnow().isoformat()),
+                )
+                inserted += 1
+            except Exception as e:
+                errors.append(f'Error insertando fila con IMEI={imei}: {e}')
+        db.commit()
+
+    if inserted:
+        flash(f'Se importaron {inserted} registros de recepción', 'success')
+    if errors:
+        flash(f'Se omitieron {len(errors)} filas durante la importación', 'warning')
+
+    return redirect(url_for('history.history_recepcion'))
+
+
 def _render_computers_history(tipo, title_prefix):
     query, params, hostname_search, sn_search, proyecto_filter = _build_computers_query(tipo)
     db = get_db()

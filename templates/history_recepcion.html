@@ -52,6 +52,12 @@
         </div>
       </div>
       <div style="margin-top:12px">
+        {% if current_user.is_authenticated and current_user.username == 'admin' %}
+          <form action="/history_recepcion/import" method="post" enctype="multipart/form-data" style="display:inline-flex;align-items:center;gap:8px;margin-right:8px;">
+            <input type="file" name="file" accept=".csv,.xlsx" required>
+            <button type="submit" class="btn-secondary btn-small">Importar registros</button>
+          </form>
+        {% endif %}
         <button id="delete-selected-btn" type="button" class="btn-secondary btn-danger">Borrar seleccionados</button>
       </div>
       <table>
