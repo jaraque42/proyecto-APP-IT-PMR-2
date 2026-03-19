@@ -1,84 +1,78 @@
-"""APP-IT-PMR-2  —  Aplicación Flask modular con Blueprints.
+"""Punto de entrada de la aplicación Flask.
 
-El monolito original se ha dividido en:
-    models.py          – User, get_db, init_db
-    utils.py           – helpers compartidos (PDF, email, importación, paginación)
-    routes/            – Blueprints (auth, admin, main, moviles, computers,
-                         history, incidents, extras)
+Los scripts `start.bat` / `start.ps1` ejecutan `python app.py`. Este fichero
+crea la app, inicializa la base de datos y registra los blueprints.
 """
+
+from __future__ import annotations
 
 import os
 import warnings
 
-from dotenv import load_dotenv
-from flask import Flask, jsonify, request as flask_request, redirect, url_for
+try:
+    from dotenv import load_dotenv
+except ModuleNotFoundError:  # pragma: no cover
+    def load_dotenv(*_args, **_kwargs):  # type: ignore[no-redef]
+        return False
+from flask import Flask, jsonify, redirect, request as flask_request, url_for
 from flask_login import LoginManager
 
-from models import get_db, close_db, init_db, User
+from models import User, close_db, get_db, init_db
 from routes import register_blueprints
 
-# ---------------------------------------------------------------------------
-# Cargar variables de entorno
-# ---------------------------------------------------------------------------
-load_dotenv()
 
-# ---------------------------------------------------------------------------
-# Crear aplicación Flask
-# ---------------------------------------------------------------------------
-app = Flask(__name__, static_folder='static', template_folder='templates')
-app.secret_key = os.environ.get('SECRET_KEY', 'dev-only-change-in-production')
-if app.secret_key == 'dev-only-change-in-production':
-    warnings.warn(
-        '⚠️  SECRET_KEY no configurada — usando valor por defecto INSEGURO. '
-        'Configura SECRET_KEY en .env',
-        stacklevel=1,
-    )
+def create_app() -> Flask:
+    load_dotenv()
 
-# ---------------------------------------------------------------------------
-# Flask-Login
-# ---------------------------------------------------------------------------
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'auth.login'
-login_manager.login_message = 'Por favor inicia sesión'
+    app = Flask(__name__, static_folder="static", template_folder="templates")
+    app.secret_key = os.environ.get("SECRET_KEY", "dev-only-change-in-production")
+    if app.secret_key == "dev-only-change-in-production":
+        warnings.warn(
+            "⚠️  SECRET_KEY no configurada — usando valor por defecto INSEGURO. "
+            "Configura SECRET_KEY en variables de entorno o en .env",
+            stacklevel=1,
+        )
 
+    init_db()
+    app.teardown_appcontext(close_db)
 
-@login_manager.unauthorized_handler
-def unauthorized():
-    """Devolver JSON 401 para peticiones AJAX/API; redirect normal para el resto."""
-    if (flask_request.accept_mimetypes.best == 'application/json'
-            or flask_request.path.startswith('/api/')):
-        return jsonify(success=False, message='Sesión expirada. Inicia sesión de nuevo.'), 401
-    return redirect(url_for('auth.login'))
+    login_manager = LoginManager()
+    login_manager.login_view = "auth.login"
+    login_manager.login_message = "Por favor inicia sesión"
+    login_manager.init_app(app)
 
+    @login_manager.unauthorized_handler
+    def unauthorized():
+        if (
+            flask_request.accept_mimetypes.best == "application/json"
+            or flask_request.path.startswith("/api/")
+        ):
+            return (
+                jsonify(success=False, message="Sesión expirada. Inicia sesión de nuevo."),
+                401,
+            )
+        return redirect(url_for("auth.login"))
 
-@login_manager.user_loader
-def load_user(user_id):
-    db = get_db()
-    row = db.execute(
-        'SELECT id, username, rol FROM usuarios WHERE id = ? AND activo = 1',
-        (user_id,),
-    ).fetchone()
-    if row:
-        return User(row['id'], row['username'], row['rol'])
-    return None
+    @login_manager.user_loader
+    def load_user(user_id: str) -> User | None:
+        db = get_db()
+        row = db.execute(
+            "SELECT id, username, rol FROM usuarios WHERE id = ? AND activo = 1",
+            (user_id,),
+        ).fetchone()
+        if not row:
+            return None
+        return User(row["id"], row["username"], row["rol"])
 
-
-# ---------------------------------------------------------------------------
-# Ciclo de vida
-# ---------------------------------------------------------------------------
-app.teardown_appcontext(close_db)
-
-# ---------------------------------------------------------------------------
-# Inicializar BD y registrar blueprints
-# ---------------------------------------------------------------------------
-init_db()
-register_blueprints(app)
+    register_blueprints(app)
+    return app
 
 
-# ---------------------------------------------------------------------------
-# Ejecución directa (desarrollo)
-# ---------------------------------------------------------------------------
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+app = create_app()
 
+
+if __name__ == "__main__":
+    host = os.environ.get("HOST", "0.0.0.0")
+    port = int(os.environ.get("PORT", "5000"))
+    debug = os.environ.get("FLASK_DEBUG", "").strip().lower() in {"1", "true", "yes", "on"}
+    app.run(host=host, port=port, debug=debug)

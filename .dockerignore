@@ -18,6 +18,9 @@ node_modules/
 .env.local
 .env.example
 
+# Datos locales
+pdfs/
+
 # Archivos de test y temporales
 cookies*.txt
 admin_cookies.txt
@@ -30,6 +33,7 @@ scripts/
 # IDE
 .vscode/
 .idea/
+.qodo/
 
 # OS
 .DS_Store

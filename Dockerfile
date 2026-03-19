@@ -1,31 +1,26 @@
-FROM python:3.11-slim
-
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+FROM python:3.12-slim
 
 WORKDIR /app
 
-# Instalamos dependencias del sistema mínimas (si alguna dependencia necesita compilarse)
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    HOST=0.0.0.0 \
+    PORT=5000
+
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends gcc ca-certificates \
+    && apt-get install -y --no-install-recommends \
+        libfreetype6 \
+        libjpeg62-turbo \
+        zlib1g \
     && rm -rf /var/lib/apt/lists/*
 
-# Copiamos solo requirements primero para aprovechar la cache de Docker
-COPY requirements.txt ./
+COPY requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt
 
-RUN python -m pip install --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt gunicorn
+COPY . /app
 
-# Copiamos el resto del proyecto
-COPY . .
-
-# Aseguramos que existan las rutas que la app usa para persistencia
-RUN mkdir -p /app/pdfs \
-    && touch /app/entregas.db || true
+RUN mkdir -p /app/pdfs/entregas
 
 EXPOSE 5000
 
-VOLUME ["/app/pdfs", "/app/entregas.db"]
-
-# Usamos gunicorn para producción (usa la app definida en app:app)
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
+CMD ["python", "app.py"]

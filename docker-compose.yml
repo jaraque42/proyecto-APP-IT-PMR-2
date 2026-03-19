@@ -1,16 +1,15 @@
-version: '3.8'
-
 services:
-  web:
-    build: .
-    image: appitpmr:latest
+  app:
+    build:
+      context: .
     ports:
       - "5000:5000"
-    env_file:
-      - .env
+    environment:
+      HOST: "0.0.0.0"
+      PORT: "5000"
+      SECRET_KEY: "change-me"
     volumes:
-      # Para desarrollo monta el código (hot-reload manual). Para producción puedes quitar el montaje del código.
-      - ./:/app
-      - ./pdfs:/app/pdfs
       - ./entregas.db:/app/entregas.db
+      - ./pdfs:/app/pdfs
     restart: unless-stopped
+

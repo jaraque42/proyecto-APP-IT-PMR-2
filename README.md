@@ -13,6 +13,17 @@ Haz **doble clic** en `start.bat` para iniciar la aplicación automáticamente.
 - Python 3.8+ instalado
 - Ejecutar `install.bat` la primera vez para crear el entorno virtual
 
+## Arranque con Docker
+```powershell
+docker compose up --build
+```
+
+Luego abre `http://127.0.0.1:5000` en tu navegador.
+
+Notas:
+- Se persisten `entregas.db` y `pdfs/` vía volúmenes (ver `docker-compose.yml`).
+- Cambia `SECRET_KEY` en `docker-compose.yml` si lo vas a dejar corriendo.
+
 ## Ejecución Manual (PowerShell en Windows)
 ```powershell
 cd C:\Users\madpmr07\Desktop\APP-IT-PMR
