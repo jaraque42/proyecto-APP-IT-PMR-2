@@ -41,10 +41,11 @@
           <input type="hidden" name="proyecto" value="{{ proyecto_filter }}">
           <label>Hostname: <input type="text" name="hostname" value="{{ hostname_search }}"></label>
           <label>S/N: <input type="text" name="sn" value="{{ sn_search }}"></label>
+          <label>Persona (Usuario): <input type="text" name="persona" value="{{ persona_search }}"></label>
           <button type="submit" class="btn-secondary btn-small">Buscar</button>
         </form>
         <div class="search-actions">
-          <a href="/history_computers/export?tipo={{ tipo_actual }}&hostname={{ hostname_search }}&sn={{ sn_search }}&proyecto={{ proyecto_filter }}" class="btn-secondary">📤 Exportar Excel</a>
+          <a href="/history_computers/export?tipo={{ tipo_actual }}&hostname={{ hostname_search }}&sn={{ sn_search }}&persona={{ persona_search }}&proyecto={{ proyecto_filter }}" class="btn-secondary">📤 Exportar Excel</a>
           <a href="/history_computers/import?proyecto={{ proyecto_filter }}" class="btn-secondary">📥 Importar desde Excel</a>
           <div class="dropdown-menu">
             <button class="dropdown-toggle" onclick="toggleDropdown(event)">Herramientas ▼</button>
@@ -102,19 +103,19 @@
       {% if total_pages > 1 %}
       <nav class="pagination" style="margin-top:16px;display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;">
         {% if page > 1 %}
-          <a href="?page={{ page - 1 }}&hostname={{ hostname_search }}&sn={{ sn_search }}&proyecto={{ proyecto_filter }}" class="btn-secondary btn-small">&laquo; Anterior</a>
+          <a href="?page={{ page - 1 }}&hostname={{ hostname_search }}&sn={{ sn_search }}&persona={{ persona_search }}&proyecto={{ proyecto_filter }}" class="btn-secondary btn-small">&laquo; Anterior</a>
         {% endif %}
         {% for p in range(1, total_pages + 1) %}
           {% if p == page %}
             <span style="font-weight:bold;padding:4px 10px;background:#e30613;color:#fff;border-radius:4px;">{{ p }}</span>
           {% elif p <= 3 or p > total_pages - 3 or (p >= page - 2 and p <= page + 2) %}
-            <a href="?page={{ p }}&hostname={{ hostname_search }}&sn={{ sn_search }}&proyecto={{ proyecto_filter }}" class="btn-secondary btn-small">{{ p }}</a>
+            <a href="?page={{ p }}&hostname={{ hostname_search }}&sn={{ sn_search }}&persona={{ persona_search }}&proyecto={{ proyecto_filter }}" class="btn-secondary btn-small">{{ p }}</a>
           {% elif p == 4 or p == total_pages - 3 %}
             <span>…</span>
           {% endif %}
         {% endfor %}
         {% if page < total_pages %}
-          <a href="?page={{ page + 1 }}&hostname={{ hostname_search }}&sn={{ sn_search }}&proyecto={{ proyecto_filter }}" class="btn-secondary btn-small">Siguiente &raquo;</a>
+          <a href="?page={{ page + 1 }}&hostname={{ hostname_search }}&sn={{ sn_search }}&persona={{ persona_search }}&proyecto={{ proyecto_filter }}" class="btn-secondary btn-small">Siguiente &raquo;</a>
         {% endif %}
         <span style="margin-left:12px;font-size:0.9em;color:#666;">Página {{ page }} de {{ total_pages }} ({{ total }} registros)</span>
       </nav>

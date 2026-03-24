@@ -11,9 +11,11 @@ import warnings
 
 try:
     from dotenv import load_dotenv
+    load_dotenv()
 except ModuleNotFoundError:  # pragma: no cover
     def load_dotenv(*_args, **_kwargs):  # type: ignore[no-redef]
         return False
+
 from flask import Flask, jsonify, redirect, request as flask_request, url_for
 from flask_login import LoginManager
 
@@ -22,7 +24,6 @@ from routes import register_blueprints
 
 
 def create_app() -> Flask:
-    load_dotenv()
 
     app = Flask(__name__, static_folder="static", template_folder="templates")
     app.secret_key = os.environ.get("SECRET_KEY", "dev-only-change-in-production")

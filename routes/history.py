@@ -58,6 +58,7 @@ def _build_computers_query(tipo):
     """Construye query + params para el histórico de computers."""
     hostname_search = request.args.get('hostname', '').strip()
     sn_search = request.args.get('sn', '').strip()
+    persona_search = request.args.get('persona', '').strip()
     proyecto_filter = request.args.get('proyecto', '').strip()
 
     query = 'SELECT * FROM computers WHERE tipo = ?'
@@ -69,12 +70,15 @@ def _build_computers_query(tipo):
     if sn_search:
         query += ' AND numero_serie LIKE ?'
         params.append(f'%{sn_search}%')
+    if persona_search:
+        query += ' AND apellidos_nombre LIKE ?'
+        params.append(f'%{persona_search}%')
     if proyecto_filter:
         query += ' AND proyecto = ?'
         params.append(proyecto_filter)
 
     query += ' ORDER BY timestamp DESC'
-    return query, params, hostname_search, sn_search, proyecto_filter
+    return query, params, hostname_search, sn_search, persona_search, proyecto_filter
 
 
 # ===================================================================
@@ -149,7 +153,7 @@ def import_history_recepcion():
 
 
 def _render_computers_history(tipo, title_prefix):
-    query, params, hostname_search, sn_search, proyecto_filter = _build_computers_query(tipo)
+    query, params, hostname_search, sn_search, persona_search, proyecto_filter = _build_computers_query(tipo)
     db = get_db()
     pag = paginate_query(db, query, params)
     display_title = f"{title_prefix} {'- ' + proyecto_filter if proyecto_filter else ''}"
@@ -158,6 +162,7 @@ def _render_computers_history(tipo, title_prefix):
         title=display_title,
         hostname_search=hostname_search,
         sn_search=sn_search,
+        persona_search=persona_search,
         proyecto_filter=proyecto_filter,
         tipo_actual=tipo,
     )
@@ -260,6 +265,7 @@ def export_history_computers():
     db = get_db()
     hostname_search = request.args.get('hostname', '').strip()
     sn_search = request.args.get('sn', '').strip()
+    persona_search = request.args.get('persona', '').strip()
     proyecto_filter = request.args.get('proyecto', '').strip()
     tipo_filter = request.args.get('tipo', '').strip()
 
@@ -271,6 +277,8 @@ def export_history_computers():
         query += ' AND hostname LIKE ?'; params.append(f'%{hostname_search}%')
     if sn_search:
         query += ' AND numero_serie LIKE ?'; params.append(f'%{sn_search}%')
+    if persona_search:
+        query += ' AND apellidos_nombre LIKE ?'; params.append(f'%{persona_search}%')
     if proyecto_filter:
         query += ' AND proyecto = ?'; params.append(proyecto_filter)
     query += ' ORDER BY timestamp DESC'

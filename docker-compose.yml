@@ -8,6 +8,8 @@ services:
       HOST: "0.0.0.0"
       PORT: "5000"
       SECRET_KEY: "change-me"
+    env_file:
+      - .env
     volumes:
       - ./entregas.db:/app/entregas.db
       - ./pdfs:/app/pdfs
