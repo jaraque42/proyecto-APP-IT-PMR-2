@@ -34,7 +34,8 @@
         <form id="entregaForm" action="/entrega" method="post" class="form">
           <label>Situm<input id="inputSitum" name="situm" type="email" pattern="^[a-zA-Z0-9._%+-]+@mitie\.es$" placeholder="usuario@mitie.es" title="Email con dominio mitie.es" required></label>
           <label>Usuario / Personal<input id="inputUsuario" name="usuario" required placeholder="Apellido1, Apellido2, Nombre" title="Formato: Apellido1, Apellido2, Nombre"></label>
-          <label>Email para Confirmación<input id="inputEmail" name="email_usuario" type="email" placeholder="correo@ejemplo.com" required></label>
+          <!-- Campo de Email para Confirmación (Oculto por ahora) -->
+          <label style="display:none;">Email para Confirmación<input id="inputEmail" name="email_usuario" type="email" placeholder="correo@ejemplo.com"></label>
           <label>IMEI<input id="inputImei" name="imei" required pattern="\d{15}" inputmode="numeric" minlength="15" maxlength="15" placeholder="15 dígitos" title="IMEI de 15 dígitos"></label>
           <label>Telefono<input id="inputTelefono" name="telefono" pattern="\d{9}" inputmode="tel" minlength="9" maxlength="9" placeholder="9 dígitos" title="Teléfono: 9 dígitos"></label>
           <label>Notas de Telefono<input name="notas_telefono"></label>
@@ -42,7 +43,10 @@
           <input type="hidden" name="codigo_otp" id="codigo_otp">
 
           <div class="actions" id="initialActions">
+            <button type="submit" class="btn-secondary">Registrar Entrega</button>
+            <!-- Botón original para validación por email (comentado por ahora)
             <button type="button" class="btn-secondary" onclick="startEmailVerification()">Enviar Código por Email</button>
+            -->
           </div>
 
           <div id="otpSection" style="display:none; margin-top:20px; padding:15px; border:2px solid var(--brand-magenta); border-radius:8px; background: rgba(142,42,158,0.05);">
@@ -65,8 +69,8 @@
         const usuario = document.getElementById('inputUsuario').value.trim();
         const imei = document.getElementById('inputImei').value.trim();
 
-        if (!email || !situm || !usuario || imei.length !== 15) {
-          alert("Por favor, rellena todos los campos (Situm, Usuario, Email e IMEI) correctamente antes de enviar el código.");
+        if (!situm || !usuario || imei.length !== 15) {
+          alert("Por favor, rellena todos los campos (Situm, Usuario e IMEI) correctamente antes de proceder.");
           return;
         }
 
